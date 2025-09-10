@@ -142,7 +142,7 @@ resource azureAiSearchServiceLocks 'Microsoft.Authorization/locks@2020-05-01' = 
   name: '${azureAiSearchService.name}-lock'
   properties: {
     level: 'CanNotDelete'
-    notes: 'Prevent Accidental Changes in AI Foundry Capability Host Agent Index AI Search Service'
+    notes: 'Prevent deleting; recovery not practical. Hard dependency for your AI Foundry Agent Service.'
     owners: []
   }
 }
