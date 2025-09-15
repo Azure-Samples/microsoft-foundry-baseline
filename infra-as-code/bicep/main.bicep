@@ -121,6 +121,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
     agentSubnetResourceId: deployVirtualNetwork.outputs.agentsEgressSubnetResourceId
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
     aiFoundryPortalUserPrincipalId: yourPrincipalId
+    existingAgentUserManagedIdentityName: deployAIAgentServiceDependencies.outputs.agentUserManagedIdentityName
   }
   dependsOn: [
     deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
@@ -161,6 +162,7 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
     existingBingAccountName: deployBingAccount.outputs.bingAccountName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
+    existingAgentUserManagedIdentityName: deployAIAgentServiceDependencies.outputs.agentUserManagedIdentityName
   }
   dependsOn: [
     deployJumpBox

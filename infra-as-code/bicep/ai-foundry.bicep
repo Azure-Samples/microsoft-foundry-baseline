@@ -26,9 +26,20 @@ param privateEndpointSubnetResourceId string
 @minLength(36)
 param aiFoundryPortalUserPrincipalId string
 
+@description('The existing User Managed Identity for the AI Foundry project.')
+@minLength(1)
+param existingAgentUserManagedIdentityName string
+
+// ---- Variables ----
+
 var aiFoundryName = 'aif${baseName}'
 
 // ---- Existing resources ----
+
+@description('Existing Agent User Managed Identity for the AI Foundry Project.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+  name: existingAgentUserManagedIdentityName
+}
 
 @description('Existing: Private DNS zone for Azure AI services using the cognitive services FQDN.')
 resource cognitiveServicesLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
@@ -67,7 +78,10 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     name: 'S0'
   }
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${agentUserManagedIdentity.id}': {}
+    }
   }
   properties: {
     customSubDomainName: aiFoundryName
