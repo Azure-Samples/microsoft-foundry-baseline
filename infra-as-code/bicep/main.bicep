@@ -156,6 +156,20 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
   params: {
     location: location
     existingAiFoundryName: deployAzureAIFoundry.outputs.aiFoundryName
+  }
+  dependsOn: [
+    deployJumpBox
+  ]
+}
+
+@description('Deploy the Azure AI Foundry project Capbability Host into the AI Foundry account.')
+module deployAzureAiFoundryProjectCapabilityHost 'ai-foundry-project-caphost.bicep' = {
+  name: 'aiFoundryProjectCapabilityHostDeploy'
+  scope: resourceGroup()
+  params: {
+    existingAiFoundryName: deployAzureAIFoundry.outputs.aiFoundryName
+    existingAiFoundryProjectName: deployAzureAiFoundryProject.outputs.aiAgentProjectName
+    existingAiFoundryPrincipalId: deployAzureAiFoundryProject.outputs.aiAgentProjectPrincipalId
     existingAISearchAccountName: deployAIAgentServiceDependencies.outputs.aiSearchName
     existingCosmosDbAccountName: deployAIAgentServiceDependencies.outputs.cosmosDbAccountName
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
