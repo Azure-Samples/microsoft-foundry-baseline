@@ -308,23 +308,25 @@ module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAs
   }
 }
 
-resource projectAISearchContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(aiFoundry::project.id, azureAISearchServiceContributorRole.id, azureAISearchService.id)
-  scope: azureAISearchService
-  properties: {
+@description('Grant the AI Foundry Project managed identity AI Search Contributor user role permissions.')
+module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
+  name: 'projectAISearchContributorAssignmentDeploy'
+  params: {
     roleDefinitionId: azureAISearchServiceContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    principalType: 'ServicePrincipal'
+    existingAiFoundryName: existingAiFoundryName
+    existingAISearchAccountName: existingAISearchAccountName
   }
 }
 
-resource projectAISearchIndexDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(aiFoundry::project.id, azureAISearchIndexDataContributorRole.id, azureAISearchService.id)
-  scope: azureAISearchService
-  properties: {
+@description('Grant the AI Foundry Project managed identity AI Search Data Contributor user role permissions.')
+module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
+  name: 'projectAISearchIndexDataContributorAssignmentDeploy'
+  params: {
     roleDefinitionId: azureAISearchIndexDataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    principalType: 'ServicePrincipal'
+    existingAiFoundryName: existingAiFoundryName
+    existingAISearchAccountName: existingAISearchAccountName
   }
 }
 
