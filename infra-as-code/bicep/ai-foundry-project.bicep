@@ -47,47 +47,6 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
   resource dataContributorRole 'sqlRoleDefinitions' existing = {
     name: '00000000-0000-0000-0000-000000000002'
   }
-
-  @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-  resource projectUserThreadContainerWriter 'sqlRoleAssignments' = {
-    name: guid(aiFoundry::project.id, cosmosDbAccount::dataContributorRole.id, 'enterprise_memory', 'user')
-    properties: {
-      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-      principalId: aiFoundry::project.identity.principalId
-      scope: scopeUserContainerId
-    }
-    dependsOn: [
-      aiFoundry::project::aiAgentService
-    ]
-  }
-
-  @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-  resource projectSystemThreadContainerWriter 'sqlRoleAssignments' = {
-    name: guid(aiFoundry::project.id, cosmosDbAccount::dataContributorRole.id, 'enterprise_memory', 'system')
-    properties: {
-      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-      principalId: aiFoundry::project.identity.principalId
-      scope: scopeSystemContainerId
-    }
-    dependsOn: [
-      cosmosDbAccount::projectUserThreadContainerWriter // Single thread applying these permissions.
-      aiFoundry::project::aiAgentService
-    ]
-  }
-
-  @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-  resource projectEntityContainerWriter 'sqlRoleAssignments' = {
-    name: guid(aiFoundry::project.id, cosmosDbAccount::dataContributorRole.id, 'enterprise_memory', 'entities')
-    properties: {
-      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-      principalId: aiFoundry::project.identity.principalId
-      scope: scopeEntityContainerId
-    }
-    dependsOn: [
-      cosmosDbAccount::projectSystemThreadContainerWriter // Single thread applying these permissions.
-      aiFoundry::project::aiAgentService
-    ]
-  }
 }
 
 resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
@@ -330,6 +289,61 @@ module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssi
   }
 }
 
+// Sql Role Assignments
+
+@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
+module projectUserThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
+  name: 'projectUserThreadContainerWriterSqlAssignmentDeploy'
+  params: {
+    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
+    principalId: aiFoundry::project.identity.principalId
+    existingAiFoundryName: existingAiFoundryName
+    existingCosmosDbAccountName: existingCosmosDbAccountName
+    existingCosmosDbName: 'enterprise_memory'
+    existingCosmosCollectionTypeName: 'user'
+    scopeUserContainerId: scopeUserContainerId
+  }
+  dependsOn: [
+    aiFoundry::project::aiAgentService
+  ]
+}
+
+@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
+module projectSystemThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
+  name: 'projectSystemThreadContainerWriterSqlAssignmentDeploy'
+  params: {
+    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
+    principalId: aiFoundry::project.identity.principalId
+    existingAiFoundryName: existingAiFoundryName
+    existingCosmosDbAccountName: existingCosmosDbAccountName
+    existingCosmosDbName: 'enterprise_memory'
+    existingCosmosCollectionTypeName: 'system'
+    scopeUserContainerId: scopeSystemContainerId
+  }
+  dependsOn: [
+    aiFoundry::project::aiAgentService
+    projectUserThreadContainerWriterSqlAssignment // Single thread applying these permissions.
+  ]
+}
+
+@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
+module projectEntityContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
+  name: 'projectEntityContainerWriterSqlAssignmentDeploy'
+  params: {
+    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
+    principalId: aiFoundry::project.identity.principalId
+    existingAiFoundryName: existingAiFoundryName
+    existingCosmosDbAccountName: existingCosmosDbAccountName
+    existingCosmosDbName: 'enterprise_memory'
+    existingCosmosCollectionTypeName: 'entities'
+    scopeUserContainerId: scopeEntityContainerId
+  }
+  dependsOn: [
+    aiFoundry::project::aiAgentService
+    projectSystemThreadContainerWriterSqlAssignment // Single thread applying these permissions.
+  ]
+}
+  
 // ---- Outputs ----
 
 output aiAgentProjectName string = aiFoundry::project.name
