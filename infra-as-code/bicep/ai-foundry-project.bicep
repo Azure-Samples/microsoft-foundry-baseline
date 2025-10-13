@@ -284,23 +284,25 @@ module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bic
   }
 }
 
-resource projectBlobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(aiFoundry::project.id, storageBlobDataContributorRole.id, agentStorageAccount.id)
-  scope: agentStorageAccount
-  properties: {
+@description('Grant the AI Foundry Project managed identity Storage Account Blob Data Contributor user role permissions.')
+module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignment.bicep' = {
+  name: 'projectBlobDataContributorAssignmentDeploy'
+  params: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    principalType: 'ServicePrincipal'
+    existingAiFoundryName: existingAiFoundryName
+    existingStorageAccountName: existingStorageAccountName
   }
 }
 
-resource projectBlobDataOwnerConditionalAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(aiFoundry::project.id, storageBlobDataOwnerRole.id, agentStorageAccount.id)
-  scope: agentStorageAccount
-  properties: {
-    principalId: aiFoundry::project.identity.principalId
+@description('Grant the AI Foundry Project managed identity Storage Account Blob Data Owner user role permissions.')
+module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAssignment.bicep' = {
+  name: 'projectBlobDataOwnerConditionalAssignmentDeploy'
+  params: {
     roleDefinitionId: storageBlobDataOwnerRole.id
-    principalType: 'ServicePrincipal'
+    principalId: aiFoundry::project.identity.principalId
+    existingAiFoundryName: existingAiFoundryName
+    existingStorageAccountName: existingStorageAccountName
     conditionVersion: '2.0'
     condition: '((!(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/read\'})  AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/filter/action\'}) AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/write\'}) ) OR (@Resource[Microsoft.Storage/storageAccounts/blobServices/containers:name] StringStartsWithIgnoreCase \'${workspaceIdAsGuid}\'))'
   }
