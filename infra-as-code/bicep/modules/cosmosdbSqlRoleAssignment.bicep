@@ -11,9 +11,9 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure AI Foundry account. This project will become a child resource of this account.')
+@description('The existing Azure AI Foundry Project Id.')
 @minLength(2)
-param existingAiFoundryName string
+param existingAiFoundryProjectId string
 
 @description('The name of the existing Cosmos Db resource.')
 param existingCosmosDbAccountName string
@@ -32,23 +32,14 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2025-05-01-previ
   name: existingCosmosDbAccountName
 }
 
-@description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
-resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  = {
-  name: existingAiFoundryName
-
-  resource project 'projects' existing = {
-    name: 'projchat'
-  }
-}
-
 // ---- Role assignment ----
 @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
 resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2025-05-01-preview' = {
-  name: guid(resourceGroup().id, aiFoundry::project.id, principalId, roleDefinitionId, existingCosmosDbName, existingCosmosCollectionTypeName)
+  name: guid(resourceGroup().id, existingAiFoundryProjectId, principalId, roleDefinitionId, existingCosmosDbName, existingCosmosCollectionTypeName)
   parent: cosmosDbAccount
   properties: {
     roleDefinitionId: roleDefinitionId
-    principalId: aiFoundry::project.identity.principalId
+    principalId: principalId
     scope: scopeUserContainerId
   }
 }

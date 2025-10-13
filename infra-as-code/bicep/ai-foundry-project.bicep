@@ -238,7 +238,7 @@ module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bic
   params: {
     roleDefinitionId: cosmosDbOperatorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingCosmosDbAccountName: existingCosmosDbAccountName
   }
 }
@@ -249,7 +249,7 @@ module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignm
   params: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingStorageAccountName: existingStorageAccountName
   }
 }
@@ -260,7 +260,7 @@ module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAs
   params: {
     roleDefinitionId: storageBlobDataOwnerRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingStorageAccountName: existingStorageAccountName
     conditionVersion: '2.0'
     condition: '((!(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/read\'})  AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/filter/action\'}) AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/write\'}) ) OR (@Resource[Microsoft.Storage/storageAccounts/blobServices/containers:name] StringStartsWithIgnoreCase \'${workspaceIdAsGuid}\'))'
@@ -273,7 +273,7 @@ module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bi
   params: {
     roleDefinitionId: azureAISearchServiceContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingAISearchAccountName: existingAISearchAccountName
   }
 }
@@ -284,7 +284,7 @@ module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssi
   params: {
     roleDefinitionId: azureAISearchIndexDataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingAISearchAccountName: existingAISearchAccountName
   }
 }
@@ -297,7 +297,7 @@ module projectUserThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleA
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'user'
@@ -314,7 +314,7 @@ module projectSystemThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRol
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'system'
@@ -332,7 +332,7 @@ module projectEntityContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssig
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
     principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryName: existingAiFoundryName
+    existingAiFoundryProjectId: aiFoundry::project.id
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'entities'

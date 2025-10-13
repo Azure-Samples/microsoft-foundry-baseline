@@ -11,9 +11,9 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure AI Foundry account. This project will become a child resource of this account.')
+@description('The existing Azure AI Foundry Project Id.')
 @minLength(2)
-param existingAiFoundryName string
+param existingAiFoundryProjectId string
 
 @description('The existing Azure AI Search account that is going to be used as the Azure AI Foundry Agent vector store (dependency).')
 @minLength(1)
@@ -24,18 +24,9 @@ resource azureAISearchService 'Microsoft.Search/searchServices@2025-02-01-previe
   name: existingAISearchAccountName
 }
 
-@description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
-resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  = {
-  name: existingAiFoundryName
-
-  resource project 'projects' existing = {
-    name: 'projchat'
-  }
-}
-
 // ---- Role assignment ----
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, aiFoundry::project.id, azureAISearchService.id, principalId, roleDefinitionId)
+  name: guid(resourceGroup().id, existingAiFoundryProjectId, azureAISearchService.id, principalId, roleDefinitionId)
   scope: azureAISearchService
   properties: {
     roleDefinitionId: roleDefinitionId
