@@ -121,7 +121,6 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
     agentSubnetResourceId: deployVirtualNetwork.outputs.agentsEgressSubnetResourceId
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
     aiFoundryPortalUserPrincipalId: yourPrincipalId
-    existingAgentUserManagedIdentityName: deployAIAgentServiceDependencies.outputs.agentUserManagedIdentityName
   }
   dependsOn: [
     deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
