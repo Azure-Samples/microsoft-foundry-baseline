@@ -162,7 +162,6 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
     existingBingAccountName: deployBingAccount.outputs.bingAccountName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
-    existingAgentUserManagedIdentityName: deployAIAgentServiceDependencies.outputs.agentUserManagedIdentityName
   }
   dependsOn: [
     deployJumpBox

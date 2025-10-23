@@ -63,19 +63,8 @@ module deployAzureAISearchService 'ai-search.bicep' = {
   }
 }
 
-@description('Deploy Azure AI Search instance for the Azure AI Foundry Agent Service (dependency). This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
-module deployUserManagedIdentity 'ai-agent-user-managed-identity.bicep' = {
-  name: 'agentUserManagedIdentityDeploy'
-  scope: resourceGroup()
-  params: {
-    location: location
-    baseName: baseName
-  }
-}
-
 // ---- Outputs ----
 
 output cosmosDbAccountName string = deployCosmosDbThreadStorageAccount.outputs.cosmosDbAccountName
 output storageAccountName string = deployAgentStorageAccount.outputs.storageAccountName
 output aiSearchName string = deployAzureAISearchService.outputs.aiSearchName
-output agentUserManagedIdentityName string = deployUserManagedIdentity.outputs.agentUserManagedIdentityName

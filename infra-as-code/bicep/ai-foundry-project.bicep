@@ -28,16 +28,7 @@ param existingBingAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-@description('The existing User Managed Identity for the AI Foundry project.')
-@minLength(1)
-param existingAgentUserManagedIdentityName string
-
 // ---- Existing resources ----
-
-@description('Existing Agent User Managed Identity for the AI Foundry Project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
-  name: existingAgentUserManagedIdentityName
-}
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
 #disable-next-line BCP053
@@ -103,6 +94,12 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 }
 
 // ---- New resources ----
+
+@description('The agent User Managed Identity for the AI Foundry Project.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' = {
+  name: 'mi-agent-${baseName}'
+  location: location
+}
 
 @description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  = {
