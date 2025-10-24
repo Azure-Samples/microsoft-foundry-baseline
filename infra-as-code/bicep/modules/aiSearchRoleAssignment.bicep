@@ -11,10 +11,6 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure AI Foundry Project Id.')
-@minLength(2)
-param existingAiFoundryProjectId string
-
 @description('The existing Azure AI Search account that is going to be used as the Azure AI Foundry Agent vector store (dependency).')
 @minLength(1)
 param existingAISearchAccountName string
@@ -26,7 +22,7 @@ resource azureAISearchService 'Microsoft.Search/searchServices@2025-02-01-previe
 
 // ---- Role assignment ----
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, existingAiFoundryProjectId, azureAISearchService.id, principalId, roleDefinitionId)
+  name: guid(azureAISearchService.id, principalId, roleDefinitionId)
   scope: azureAISearchService
   properties: {
     roleDefinitionId: roleDefinitionId

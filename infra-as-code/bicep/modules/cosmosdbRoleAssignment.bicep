@@ -11,10 +11,6 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure AI Foundry Project Id.')
-@minLength(2)
-param existingAiFoundryProjectId string
-
 @description('The name of the existing Cosmos Db resource.')
 param existingCosmosDbAccountName string
 
@@ -25,7 +21,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2025-05-01-previ
 
 // ---- Role assignment ----
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, existingAiFoundryProjectId, cosmosDbAccount.id, principalId, roleDefinitionId)
+  name: guid(cosmosDbAccount.id, principalId, roleDefinitionId)
   scope: cosmosDbAccount
   properties: {
     roleDefinitionId: roleDefinitionId

@@ -11,10 +11,6 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure AI Foundry Project Id.')
-@minLength(2)
-param existingAiFoundryProjectId string
-
 @description('The existing Azure Storage account that is going to be used as the Azure AI Foundry Agent blob store (dependency).')
 @minLength(3)
 param existingStorageAccountName string
@@ -32,7 +28,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' exis
 
 // ---- Role assignment ----
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, existingAiFoundryProjectId, agentStorageAccount.id, principalId, roleDefinitionId)
+  name: guid(agentStorageAccount.id, principalId, roleDefinitionId)
   scope: agentStorageAccount
   properties: {
     roleDefinitionId: roleDefinitionId

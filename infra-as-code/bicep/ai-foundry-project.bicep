@@ -28,7 +28,16 @@ param existingBingAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
+@description('The existing User Managed Identity for the AI Foundry project.')
+@minLength(1)
+param existingAgentUserManagedIdentityName string
+
 // ---- Existing resources ----
+
+@description('Existing Agent User Managed Identity for the AI Foundry Project.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+  name: existingAgentUserManagedIdentityName
+}
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
 #disable-next-line BCP053
@@ -57,30 +66,9 @@ resource azureAISearchService 'Microsoft.Search/searchServices@2025-02-01-previe
   name: existingAISearchAccountName
 }
 
-resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
-  scope: subscription()
-}
-
-resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
-  scope: subscription()
-}
-
-// Storage Blob Data Contributor
-resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-  scope: subscription()
-}
-
 // Storage Blob Data Owner Role
 resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
-  scope: subscription()
-}
-
-resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '230815da-be43-4aae-9cb4-875f7bd000aa'
   scope: subscription()
 }
 
@@ -103,7 +91,10 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
     name: 'projchat'
     location: location
     identity: {
-      type: 'SystemAssigned'
+      type: 'UserAssigned'
+      userAssignedIdentities: {
+        '${agentUserManagedIdentity.id}': {}
+      }
     }
     properties: {
       description: 'Chat using internet data in your Azure AI Foundry Agent.'
@@ -123,9 +114,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
           location: cosmosDbAccount.location
         }
       }
-      dependsOn: [
-        projectDbCosmosDbOperatorAssignment
-      ]
+      dependsOn: []
     }
 
     @description('Create project connection to the Azure Storage account; dependency for Azure AI Foundry Agent Service.')
@@ -142,7 +131,6 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
         }
       }
       dependsOn: [
-        projectBlobDataContributorAssignment
         projectBlobDataOwnerConditionalAssignment
         threadStorageConnection // Single thread these connections, else conflict errors tend to happen
       ]
@@ -162,8 +150,6 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
         }
       }
       dependsOn: [
-        projectAISearchIndexDataContributorAssignment
-        projectAISearchContributorAssignment
         storageConnection // Single thread these connections, else conflict errors tend to happen
       ]
     }
@@ -189,7 +175,6 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
         aiSearchConnection // Single thread these connections, else conflict errors tend to happen
       ]
     }
-
 
     @description('Create the Azure AI Foundry Agent Service capability.')
     resource aiAgentService 'capabilityHosts' = {
@@ -232,60 +217,15 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
 
 // Role assignments
 
-@description('Grant the AI Foundry Project managed identity Cosmos Db Db Operator user role permissions.')
-module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bicep' = {
-  name: 'projectDbCosmosDbOperatorAssignmentDeploy'
-  params: {
-    roleDefinitionId: cosmosDbOperatorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
-    existingCosmosDbAccountName: existingCosmosDbAccountName
-  }
-}
-
-@description('Grant the AI Foundry Project managed identity Storage Account Blob Data Contributor user role permissions.')
-module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignment.bicep' = {
-  name: 'projectBlobDataContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: storageBlobDataContributorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
-    existingStorageAccountName: existingStorageAccountName
-  }
-}
-
 @description('Grant the AI Foundry Project managed identity Storage Account Blob Data Owner user role permissions.')
 module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAssignment.bicep' = {
   name: 'projectBlobDataOwnerConditionalAssignmentDeploy'
   params: {
     roleDefinitionId: storageBlobDataOwnerRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
+    principalId: agentUserManagedIdentity.properties.principalId
     existingStorageAccountName: existingStorageAccountName
     conditionVersion: '2.0'
     condition: '((!(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/read\'})  AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/filter/action\'}) AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/write\'}) ) OR (@Resource[Microsoft.Storage/storageAccounts/blobServices/containers:name] StringStartsWithIgnoreCase \'${workspaceIdAsGuid}\'))'
-  }
-}
-
-@description('Grant the AI Foundry Project managed identity AI Search Contributor user role permissions.')
-module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
-  name: 'projectAISearchContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: azureAISearchServiceContributorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
-    existingAISearchAccountName: existingAISearchAccountName
-  }
-}
-
-@description('Grant the AI Foundry Project managed identity AI Search Data Contributor user role permissions.')
-module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
-  name: 'projectAISearchIndexDataContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: azureAISearchIndexDataContributorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
-    existingAISearchAccountName: existingAISearchAccountName
   }
 }
 
@@ -296,8 +236,7 @@ module projectUserThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleA
   name: 'projectUserThreadContainerWriterSqlAssignmentDeploy'
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
+    principalId: agentUserManagedIdentity.properties.principalId
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'user'
@@ -313,8 +252,7 @@ module projectSystemThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRol
   name: 'projectSystemThreadContainerWriterSqlAssignmentDeploy'
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
+    principalId: agentUserManagedIdentity.properties.principalId
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'system'
@@ -331,8 +269,7 @@ module projectEntityContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssig
   name: 'projectEntityContainerWriterSqlAssignmentDeploy'
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: aiFoundry::project.identity.principalId
-    existingAiFoundryProjectId: aiFoundry::project.id
+    principalId: agentUserManagedIdentity.properties.principalId
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'entities'

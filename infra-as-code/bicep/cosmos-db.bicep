@@ -22,7 +22,16 @@ param debugUserPrincipalId string
 @minLength(1)
 param privateEndpointSubnetResourceId string
 
+@description('The existing User Managed Identity for the AI Foundry project.')
+@minLength(1)
+param existingAgentUserManagedIdentityName string
+
 // ---- Existing resources ----
+
+@description('Existing Agent User Managed Identity for the AI Foundry Project.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+  name: existingAgentUserManagedIdentityName
+}
 
 resource cosmosDbLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   name: 'privatelink.documents.azure.com'
@@ -31,6 +40,12 @@ resource cosmosDbLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06
 // Cosmos DB Account Reader Role
 resource cosmosDbAccountReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'fbdf93bf-df7d-467e-a4d2-9458aa1360c8'
+  scope: subscription()
+}
+
+// Cosmos DB Account Operator Role
+resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '230815da-be43-4aae-9cb4-875f7bd000aa'
   scope: subscription()
 }
 
@@ -197,6 +212,16 @@ resource assignDebugUserToCosmosAccountReader 'Microsoft.Authorization/roleAssig
     roleDefinitionId: cosmosDbAccountReaderRole.id
     principalId: debugUserPrincipalId
     principalType: 'User'
+  }
+}
+
+@description('Grant the AI Foundry Project managed identity Cosmos Db Db Operator user role permissions.')
+module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bicep' = {
+  name: 'projectDbCosmosDbOperatorAssignmentDeploy'
+  params: {
+    roleDefinitionId: cosmosDbOperatorRole.id
+    principalId: agentUserManagedIdentity.properties.principalId
+    existingCosmosDbAccountName: cosmosDbAccount.name
   }
 }
 
