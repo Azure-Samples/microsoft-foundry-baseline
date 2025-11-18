@@ -235,7 +235,7 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   }
 }
 
-@description('The Azure AI Foundry portal is only able to be accessed from the virtual network, this jump box gives you access to that portal.')
+@description('The Foundry portal is only able to be accessed from the virtual network, this jump box gives you access to that portal.')
 resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   name: 'vm-${jumpBoxName}'
   location: location

@@ -4,23 +4,23 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
-@description('The existing Azure AI Foundry account. This project will become a child resource of this account.')
+@description('The existing Microsoft Foundry account. This project will become a child resource of this account.')
 @minLength(2)
-param existingAiFoundryName string
+param existingFoundryName string
 
-@description('The existing Azure Cosmos DB account that is going to be used as the Azure AI Foundry Agent thread storage database (dependency).')
+@description('The existing Azure Cosmos DB account that is going to be used as the Foundry Agent Service thread storage database (dependency).')
 @minLength(3)
 param existingCosmosDbAccountName string
 
-@description('The existing Azure Storage account that is going to be used as the Azure AI Foundry Agent blob store (dependency).')
+@description('The existing Azure Storage account that is going to be used as the Foundry Agent Service blob store (dependency).')
 @minLength(3)
 param existingStorageAccountName string
 
-@description('The existing Azure AI Search account that is going to be used as the Azure AI Foundry Agent vector store (dependency).')
+@description('The existing Azure AI Search account that is going to be used as the Foundry Agent Service vector store (dependency).')
 @minLength(1)
 param existingAISearchAccountName string
 
-@description('The existing Bing grounding data account that is available to Azure AI Foundry Agent agents in this project.')
+@description('The existing Bing grounding data account that is available to Foundry Agent Service agents in this project.')
 @minLength(1)
 param existingBingAccountName string
 
@@ -28,27 +28,27 @@ param existingBingAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-@description('The existing User Managed Identity for the AI Foundry project.')
+@description('The existing User Managed Identity for the Foundry project.')
 @minLength(1)
 param existingAgentUserManagedIdentityName string
 
 // ---- Existing resources ----
 
-@description('Existing Agent User Managed Identity for the AI Foundry Project.')
+@description('Existing Agent User Managed Identity for the Foundry project.')
 resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
 #disable-next-line BCP053
-var workspaceId = aiFoundry::project.properties.internalId
+var workspaceId = foundry::project.properties.internalId
 var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId, 8, 4)}-${substring(workspaceId, 12, 4)}-${substring(workspaceId, 16, 4)}-${substring(workspaceId, 20, 12)}'
 
 var scopeUserContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-thread-message-store'
 var scopeSystemContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-system-thread-message-store'
 var scopeEntityContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-agent-entity-store'
 
-@description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Azure AI Foundry project\'s identity.')
+@description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Foundry project\'s identity.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
   name: existingCosmosDbAccountName
 
@@ -83,9 +83,9 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 
 // ---- New resources ----
 
-@description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
-resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  = {
-  name: existingAiFoundryName
+@description('Existing Foundry account. The project will be created as a child resource of this account.')
+resource foundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  = {
+  name: existingFoundryName
 
   resource project 'projects' = {
     name: 'projchat'
@@ -97,11 +97,11 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
       }
     }
     properties: {
-      description: 'Chat using internet data in your Azure AI Foundry Agent.'
+      description: 'Chat using internet data in your Foundry Agent.'
       displayName: 'Chat with Internet Data'
     }
 
-    @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Foundry Agent Service.')
+    @description('Create project connection to CosmosDB (thread storage); dependency for Foundry Agent Service.')
     resource threadStorageConnection 'connections' = {
       name: cosmosDbAccount.name
       properties: {
@@ -117,7 +117,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
       dependsOn: []
     }
 
-    @description('Create project connection to the Azure Storage account; dependency for Azure AI Foundry Agent Service.')
+    @description('Create project connection to the Azure Storage account; dependency for Foundry Agent Service.')
     resource storageConnection 'connections' = {
       name: agentStorageAccount.name
       properties: {
@@ -136,7 +136,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
       ]
     }
 
-    @description('Create project connection to Azure AI Search; dependency for Azure AI Foundry Agent Service.')
+    @description('Create project connection to Azure AI Search; dependency for Foundry Agent Service.')
     resource aiSearchConnection 'connections' = {
       name: azureAISearchService.name
       properties: {
@@ -176,7 +176,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
       ]
     }
 
-    @description('Create the Azure AI Foundry Agent Service capability.')
+    @description('Create the Foundry Agent Service capability host.')
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
       properties: {
@@ -217,7 +217,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  =
 
 // Role assignments
 
-@description('Grant the AI Foundry Project managed identity Storage Account Blob Data Owner user role permissions.')
+@description('Grant the Foundry project managed identity Storage Account Blob Data Owner user role permissions.')
 module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAssignment.bicep' = {
   name: 'projectBlobDataOwnerConditionalAssignmentDeploy'
   params: {
@@ -243,7 +243,7 @@ module projectUserThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleA
     scopeUserContainerId: scopeUserContainerId
   }
   dependsOn: [
-    aiFoundry::project::aiAgentService
+    foundry::project::aiAgentService
   ]
 }
 
@@ -259,7 +259,7 @@ module projectSystemThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRol
     scopeUserContainerId: scopeSystemContainerId
   }
   dependsOn: [
-    aiFoundry::project::aiAgentService
+    foundry::project::aiAgentService
     projectUserThreadContainerWriterSqlAssignment // Single thread applying these permissions.
   ]
 }
@@ -276,11 +276,11 @@ module projectEntityContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssig
     scopeUserContainerId: scopeEntityContainerId
   }
   dependsOn: [
-    aiFoundry::project::aiAgentService
+    foundry::project::aiAgentService
     projectSystemThreadContainerWriterSqlAssignment // Single thread applying these permissions.
   ]
 }
   
 // ---- Outputs ----
 
-output aiAgentProjectName string = aiFoundry::project.name
+output aiAgentProjectName string = foundry::project.name

@@ -9,7 +9,7 @@ param location string = resourceGroup().location
 @maxLength(8)
 param baseName string
 
-@description('Assign your user some roles to support access to the Azure AI Foundry Agent dependencies for troubleshooting post deployment')
+@description('Assign your user some roles to support access to the Foundry agent dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
 param debugUserPrincipalId string
@@ -24,13 +24,13 @@ param privateEndpointSubnetResourceId string
 
 // ---- New resources ----
 
-@description('The agent User Managed Identity for the AI Foundry Project. This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
+@description('The agent User Managed Identity for the Foundry project. This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
 resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' = {
   name: 'mi-agent-${baseName}'
   location: location
 }
 
-@description('Deploy Azure Storage account for the Azure AI Foundry Agent Service (dependency). This is used for binaries uploaded within threads or as "knowledge" uploaded as part of an agent.')
+@description('Deploy Azure Storage account for the Foundry Agent Service (dependency). This is used for binaries uploaded within threads or as "knowledge" uploaded as part of an agent.')
 module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
   name: 'agentStorageAccountDeploy'
   scope: resourceGroup()
@@ -44,7 +44,7 @@ module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
   }
 }
 
-@description('Deploy Azure Cosmos DB account for the Azure AI Foundry Agent Service (dependency). This is used for storing agent definitions and threads.')
+@description('Deploy Azure Cosmos DB account for the Foundry Agent Service (dependency). This is used for storing agent definitions and threads.')
 module deployCosmosDbThreadStorageAccount 'cosmos-db.bicep' = {
   name: 'cosmosDbThreadStorageAccountDeploy'
   scope: resourceGroup()
@@ -58,7 +58,7 @@ module deployCosmosDbThreadStorageAccount 'cosmos-db.bicep' = {
   }
 }
 
-@description('Deploy Azure AI Search instance for the Azure AI Foundry Agent Service (dependency). This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
+@description('Deploy Azure AI Search instance for the Foundry Agent Service (dependency). This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
 module deployAzureAISearchService 'ai-search.bicep' = {
   name: 'aiSearchServiceDeploy'
   scope: resourceGroup()

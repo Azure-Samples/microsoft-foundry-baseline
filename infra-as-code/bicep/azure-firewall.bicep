@@ -12,7 +12,7 @@ param virtualNetworkName string
 @minLength(4)
 param logAnalyticsWorkspaceName string
 
-@description('The name of the subnet containing the Azure AI Foundry Agents. Must be in the same virtual network that is provided.')
+@description('The name of the subnet containing the Foundry agents. Must be in the same virtual network that is provided.')
 @minLength(8)
 param agentsEgressSubnetName string
 

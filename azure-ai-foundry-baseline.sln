@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "website", "website", "{32E63C23-E2FE-CC65-73DA-6F37BD55E479}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "chatui", "website\chatui\chatui.csproj", "{25A423D8-2636-5591-3070-D954AA0BC99B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{25A423D8-2636-5591-3070-D954AA0BC99B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25A423D8-2636-5591-3070-D954AA0BC99B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25A423D8-2636-5591-3070-D954AA0BC99B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25A423D8-2636-5591-3070-D954AA0BC99B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{25A423D8-2636-5591-3070-D954AA0BC99B} = {32E63C23-E2FE-CC65-73DA-6F37BD55E479}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5D631DAF-BB54-4BC5-81C6-71DCB89B0A67}
+	EndGlobalSection
+EndGlobal

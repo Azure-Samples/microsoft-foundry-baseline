@@ -11,7 +11,7 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure Storage account that is going to be used as the Azure AI Foundry Agent blob store (dependency).')
+@description('The existing Azure Storage account that is going to be used as the Foundry Agent Service blob store (dependency).')
 @minLength(3)
 param existingStorageAccountName string
 
