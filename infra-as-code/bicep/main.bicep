@@ -183,7 +183,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
     debugUserPrincipalId: yourPrincipalId
   }
   dependsOn: [
-    deployAIAgentServiceDependencies // There is a Storage account in the AI Agent dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
+    deployAIAgentServiceDependencies // There is a Storage account in the Foundry Agent Service dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
   ]
 }
 

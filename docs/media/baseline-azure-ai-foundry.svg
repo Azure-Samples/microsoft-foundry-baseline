@@ -3032,11 +3032,11 @@
 		</g>
 		<g id="shape2061-1089" v:mID="2061" v:groupContext="shape" transform="translate(758.46,-553.912)">
 			<title>Sheet.2061</title>
-			<desc>Azure AI agent integration subnet</desc>
+			<desc>Foundry Agent integration subnet</desc>
 			<v:textBlock v:margins="rect(4,4,4,4)"/>
 			<v:textRect cx="67.5" cy="842.813" width="135" height="19.125"/>
 			<rect x="0" y="833.25" width="135" height="19.125" class="st9"/>
-			<text x="4" y="839.81" class="st13" v:langID="1033"><v:paragraph/><v:tabList/>Azure AI agent integration <tspan x="4"
+			<text x="4" y="839.81" class="st13" v:langID="1033"><v:paragraph/><v:tabList/>Foundry Agent integration <tspan x="4"
 						dy="1.2em" class="st25">subnet</tspan></text>		</g>
 		<g id="shape2082-1093" v:mID="2082" v:groupContext="shape" transform="translate(773.91,-382.302)">
 			<title>Rectangle.2082</title>
