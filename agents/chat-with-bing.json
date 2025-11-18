@@ -1,6 +1,6 @@
 {
     "name": "Baseline Chatbot Agent",
-    "description": "Example of an Foundry Agent that uses the Bing Search tool to answer questions. Used in the Microsoft Learn AI chat reference architecture. https://learn.microsoft.com/en-us/azure/architecture/architecture/baseline-azure-ai-foundry-chat",
+    "description": "Example of an Foundry Agent that uses the Bing Search tool to answer questions. Used in the Microsoft Learn AI chat reference architecture. https://learn.microsoft.com/azure/architecture/architecture/baseline-azure-ai-foundry-chat",
     "model": "MODEL_CONNECTION_NAME",
     "instructions": "You are a helpful Chatbot agent. You'll consult the Bing Search tool to answer questions. Always search the web for information before responding.",
     "tools": [
