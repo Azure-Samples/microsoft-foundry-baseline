@@ -12,7 +12,7 @@ param virtualNetworkName string
 @minLength(4)
 param logAnalyticsWorkspaceName string
 
-@description('The name of the subnet containing the Azure AI Foundry Agents. Must be in the same virtual network that is provided.')
+@description('The name of the subnet containing the Foundry agents. Must be in the same virtual network that is provided.')
 @minLength(8)
 param agentsEgressSubnetName string
 
@@ -120,7 +120,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
     }
   }
 
-  @description('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
+  @description('Add rules for the Foundry Agent Service egress and jump boxes subnets. Extend to support other subnets as needed.')
   resource applicationRules 'ruleCollectionGroups' = {
     name: 'DefaultApplicationRuleCollectionGroup'
     properties: {

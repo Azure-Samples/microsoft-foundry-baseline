@@ -1,5 +1,5 @@
 {
-    "name": "AI Agent service chat baseline reference implementation",
+    "name": "Foundry Agent Service chat baseline reference implementation",
     "image": "mcr.microsoft.com/devcontainers/dotnet:dev-8.0-jammy",
     "runArgs": ["--network=host"],
     "remoteUser": "vscode",

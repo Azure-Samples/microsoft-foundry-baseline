@@ -25,7 +25,7 @@ param virtualNetworkName string
 @minLength(1)
 param privateEndpointsSubnetName string
 
-@description('Assign your user some roles to support access to the Azure AI Foundry Agent dependencies for troubleshooting post deployment')
+@description('Assign your user some roles to support access to the Foundry Agent Service dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
 param debugUserPrincipalId string

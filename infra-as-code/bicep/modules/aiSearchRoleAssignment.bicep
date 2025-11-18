@@ -11,7 +11,7 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The existing Azure AI Search account that is going to be used as the Azure AI Foundry Agent vector store (dependency).')
+@description('The existing Azure AI Search account that is going to be used as the Foundry Agent Service vector store (dependency).')
 @minLength(1)
 param existingAISearchAccountName string
 

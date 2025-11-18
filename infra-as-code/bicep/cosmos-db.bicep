@@ -13,7 +13,7 @@ param baseName string
 @minLength(4)
 param logAnalyticsWorkspaceName string
 
-@description('Assign your user some roles to support access to the Azure AI Foundry Agent dependencies for troubleshooting post deployment')
+@description('Assign your user some roles to support access to the Foundry Agent Service dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
 param debugUserPrincipalId string
@@ -22,13 +22,13 @@ param debugUserPrincipalId string
 @minLength(1)
 param privateEndpointSubnetResourceId string
 
-@description('The existing User Managed Identity for the AI Foundry project.')
+@description('The existing User Managed Identity for the Foundry project.')
 @minLength(1)
 param existingAgentUserManagedIdentityName string
 
 // ---- Existing resources ----
 
-@description('Existing Agent User Managed Identity for the AI Foundry Project.')
+@description('Existing Agent User Managed Identity for the Foundry project.')
 resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
   name: existingAgentUserManagedIdentityName
 }
@@ -55,7 +55,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 // ---- New resources ----
 
-@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Azure AI Foundry Agent Service. It\'s used to store threads and agent definitions.')
+@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Foundry Agent Service. It\'s used to store threads and agent definitions.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: 'cdb-ai-agent-threads-${baseName}'
   location: location
@@ -215,7 +215,7 @@ resource assignDebugUserToCosmosAccountReader 'Microsoft.Authorization/roleAssig
   }
 }
 
-@description('Grant the AI Foundry Project managed identity Cosmos Db Db Operator user role permissions.')
+@description('Grant the Foundry project managed identity Cosmos DB Db Operator user role permissions.')
 module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bicep' = {
   name: 'projectDbCosmosDbOperatorAssignmentDeploy'
   params: {
@@ -232,7 +232,7 @@ resource cosmosDbAccountLocks 'Microsoft.Authorization/locks@2020-05-01' = {
   name: '${cosmosDbAccount.name}-lock'
   properties: {
     level: 'CanNotDelete'
-    notes: 'Prevent deleting; recovery not practical. Hard dependency for your AI Foundry Agent Service.'
+    notes: 'Prevent deleting; recovery not practical. Hard dependency for your Foundry Agent Service.'
     owners: []
   }
 }

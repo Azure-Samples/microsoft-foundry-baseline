@@ -28,7 +28,7 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
-@description('Assign your user some roles to support fluid access when working in the Azure AI Foundry portal and its dependencies.')
+@description('Assign your user some roles to support fluid access when working in the Foundry portal and its dependencies.')
 @maxLength(36)
 @minLength(36)
 param yourPrincipalId string
@@ -90,7 +90,7 @@ module deployAzureFirewall 'azure-firewall.bicep' = {
   }
 }
 
-@description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
+@description('Deploys Azure Bastion and the jump box, which is used for private access to Foundry and its dependencies.')
 module deployJumpBox 'jump-box.bicep' = {
   name: 'jumpBoxDeploy'
   scope: resourceGroup()
@@ -108,11 +108,11 @@ module deployJumpBox 'jump-box.bicep' = {
   ]
 }
 
-// Deploy the Azure AI Foundry account and Foundry Agent Service components.
+// Deploy the Microsoft Foundry account and Foundry Agent Service components.
 
-@description('Deploy Azure AI Foundry with Azure AI Foundry Agent capability. No projects yet deployed.')
-module deployAzureAIFoundry 'ai-foundry.bicep' = {
-  name: 'aiFoundryDeploy'
+@description('Deploy Microsoft Foundry with Foundry Agent Service capability. No projects yet deployed.')
+module deployFoundry 'ai-foundry.bicep' = {
+  name: 'foundryDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -120,14 +120,14 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     agentSubnetResourceId: deployVirtualNetwork.outputs.agentsEgressSubnetResourceId
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
-    aiFoundryPortalUserPrincipalId: yourPrincipalId
+    foundryPortalUserPrincipalId: yourPrincipalId
   }
   dependsOn: [
     deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
   ]
 }
 
-@description('Deploys the Azure AI Foundry Agent dependencies, Azure Storage, Azure AI Search, and Cosmos DB.')
+@description('Deploys the Foundry Agent Service dependencies, Azure Storage, Azure AI Search, and Cosmos DB.')
 module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
   name: 'aiAgentServiceDependenciesDeploy'
   scope: resourceGroup()
@@ -140,7 +140,7 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
   }
 }
 
-@description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Foundry Agent Service.')
+@description('Deploy the Bing account for Internet grounding data to be used by agents in the Foundry Agent Service.')
 module deployBingAccount 'bing-grounding.bicep' = {
   name: 'bingGroundingDeploy'
   scope: resourceGroup()
@@ -149,13 +149,13 @@ module deployBingAccount 'bing-grounding.bicep' = {
   }
 }
 
-@description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Foundry Agent Service.')
-module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
-  name: 'aiFoundryProjectDeploy'
+@description('Deploy the Foundry project into the Foundry account. This is the project is the home of the Foundry Agent Service.')
+module deployFoundryProject 'ai-foundry-project.bicep' = {
+  name: 'foundryProjectDeploy'
   scope: resourceGroup()
   params: {
     location: location
-    existingAiFoundryName: deployAzureAIFoundry.outputs.aiFoundryName
+    existingFoundryName: deployFoundry.outputs.foundryName
     existingAISearchAccountName: deployAIAgentServiceDependencies.outputs.aiSearchName
     existingCosmosDbAccountName: deployAIAgentServiceDependencies.outputs.cosmosDbAccountName
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
@@ -183,7 +183,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
     debugUserPrincipalId: yourPrincipalId
   }
   dependsOn: [
-    deployAIAgentServiceDependencies // There is a Storage account in the AI Agent dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
+    deployAIAgentServiceDependencies // There is a Storage account in the Foundry Agent Service dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
   ]
 }
 
@@ -201,7 +201,7 @@ module deployKeyVault 'key-vault.bicep' = {
   }
 }
 
-@description('Deploy Application Insights. Used by the Azure Web App to monitor the deployed application and connected to the Azure AI Foundry project.')
+@description('Deploy Application Insights. Used by the Azure Web App to monitor the deployed application and connected to the Foundry project.')
 module deployApplicationInsights 'application-insights.bicep' = {
   name: 'applicationInsightsDeploy'
   scope: resourceGroup()
@@ -212,7 +212,7 @@ module deployApplicationInsights 'application-insights.bicep' = {
   }
 }
 
-@description('Deploy the web app for the front end demo UI. The web application will call into the Azure AI Foundry Agent Service.')
+@description('Deploy the web app for the front end demo UI. The web application will call into the Foundry Agent Service.')
 module deployWebApp 'web-app.bicep' = {
   name: 'webAppDeploy'
   scope: resourceGroup()
@@ -226,8 +226,8 @@ module deployWebApp 'web-app.bicep' = {
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     existingWebAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
-    existingAzureAiFoundryResourceName: deployAzureAIFoundry.outputs.aiFoundryName
-    existingAzureAiFoundryProjectName: deployAzureAiFoundryProject.outputs.aiAgentProjectName
+    existingFoundryResourceName: deployFoundry.outputs.foundryName
+    existingFoundryProjectName: deployFoundryProject.outputs.aiAgentProjectName
   }
 }
 
