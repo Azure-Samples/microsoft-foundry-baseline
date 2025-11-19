@@ -188,6 +188,9 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
+   | :warning: | If the deployment fails with the error `AccountProvisioningStateInvalid`, perform a second deployment attempt. The subsequent attempt typically succeeds because the Cognitive Services account resource has reached the valid provisioning state by the time the operation is re-evaluated. We are still tracking this issue, this behavior appears to be caused by a race condition in which the account resource may temporarily report an intermediate `Accepted` state. During this interval, the private endpoint cannot be deployed despite having a valid dependency on the account resource. |
+   | :--------: | :------------------------- |
+
 ### 2. Deploy an agent in the Microsoft Foundry Agent Service
 
 To test this scenario, you'll be deploying an AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Foundry. In this architecture, a network perimeter is established, and you must interact with the Foundry portal and its resources from within the network.
