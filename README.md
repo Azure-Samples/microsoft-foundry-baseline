@@ -188,6 +188,9 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
+   | :warning: | Some deployments are failing with an `AccountProvisioningStateInvalid` error related to the deployment of the Microsoft Foundry private endpoint. If you receive this, the only known workaround is to directly rerun this command. We are tracking this issue, and we will remove this added instruction once there is a resolution. |
+   | :--------: | :------------------------- |
+
 ### 2. Deploy an agent in the Microsoft Foundry Agent Service
 
 To test this scenario, you'll be deploying an AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Foundry. In this architecture, a network perimeter is established, and you must interact with the Foundry portal and its resources from within the network.
