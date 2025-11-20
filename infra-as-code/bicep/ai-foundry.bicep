@@ -128,9 +128,6 @@ resource cognitiveServicesUser 'Microsoft.Authorization/roleAssignments@2022-04-
 resource foundryPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: 'pe-foundry'
   location: location
-  dependsOn: [
-    foundry::model
-  ]
   properties: {
     subnet: {
       id: privateEndpointSubnetResourceId
