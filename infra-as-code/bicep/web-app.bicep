@@ -103,7 +103,7 @@ resource appServiceExistingPrivateDnsZone 'Microsoft.Network/privateDnsZones@202
 }
 
 @description('Existing Foundry account. This account is where the agents hosted in Foundry Agent Service will be deployed. The web app code calls to these agents.')
-resource foundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
+resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' existing = {
   name: existingFoundryResourceName
 
   resource project 'projects' existing = {
