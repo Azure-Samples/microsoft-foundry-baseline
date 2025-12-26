@@ -247,7 +247,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    az rest -u $FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
 
    # Capture the Agent's ID
-   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query 'data[0].id' -o tsv)"
+   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query last_id -o tsv)"
 
    echo $AGENT_ID
    ```
@@ -262,17 +262,17 @@ Here you'll test your orchestration agent by invoking it directly from the Found
 
    You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Access policies on your account, if this is the first time you are connecting through the jump box.
 
-1. Navigate to the Foundry project named **projchat** in your resource group and open the Foundry portal by clicking the **Go to Microsoft Foundry portal** button.
+1. Navigate to the Foundry project named **projchat** in your resource group and open the Foundry portal by clicking the **Go to Foundry portal** button.
 
    This will take you directly into the 'Chat project'. Alternatively, you can find all your Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
 
-1. Click **Agents** in the side navigation.
+1. In the upper-right corner, if not already enabled, toggle New Foundry to switch into the Microsoft Foundry (new) portal.
 
-1. Select the agent named 'Baseline Chatbot Agent'.
+1. In the top-right corner, click Build. This opens by default the Agents blade in the side navigation, where you can view the available agents and create new ones.
 
-1. Click the **Try in playground** button.
+1. Select the agent you just created from the previous step named 'baseline-chatbot-agent'.
 
-1. Enter a question that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
+1. Enter a question to the agent that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
 
 1. A grounded response to your question should appear on the UI.
 
