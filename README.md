@@ -272,7 +272,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Using the same PowerShell terminal session from previous steps, download the web UI.
 
    ```powershell
-   Invoke-WebRequest -Uri https://github.com/Azure-Samples/azure-ai-foundry-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
+   Invoke-WebRequest -Uri https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
    ```
 
 1. Upload the web application to Azure Storage, where the web app will load the code from.
