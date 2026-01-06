@@ -47,8 +47,7 @@ var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId
 var scopeUserContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-thread-message-store'
 var scopeSystemContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-system-thread-message-store'
 var scopeEntityContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-agent-entity-store'
-var scopeAgentDefinitionsContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-agent-definitions'
-var scopeRunStateContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-run-state'
+var scopeAllContainers = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory'
 
 @description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Foundry project\'s identity.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
@@ -233,87 +232,19 @@ module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAs
 
 // Sql Role Assignments
 
-@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-module projectUserThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
-  name: 'projectUserThreadContainerWriterSqlAssignmentDeploy'
+@description('Assign the project\'s managed identity the ability to read and write data in all collections within enterprise_memory database.')
+module containersWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
+  name: 'containersWriterSqlAssignmentDeploy'
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
     principalId: agentUserManagedIdentity.properties.principalId
     existingCosmosDbAccountName: existingCosmosDbAccountName
     existingCosmosDbName: 'enterprise_memory'
-    existingCosmosCollectionTypeName: 'user'
-    scopeUserContainerId: scopeUserContainerId
+    existingCosmosCollectionTypeName: 'containers'
+    scopeUserContainerId: scopeAllContainers
   }
   dependsOn: [
     foundry::project::aiAgentService
-  ]
-}
-
-@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-module projectSystemThreadContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
-  name: 'projectSystemThreadContainerWriterSqlAssignmentDeploy'
-  params: {
-    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: agentUserManagedIdentity.properties.principalId
-    existingCosmosDbAccountName: existingCosmosDbAccountName
-    existingCosmosDbName: 'enterprise_memory'
-    existingCosmosCollectionTypeName: 'system'
-    scopeUserContainerId: scopeSystemContainerId
-  }
-  dependsOn: [
-    foundry::project::aiAgentService
-    projectUserThreadContainerWriterSqlAssignment // Single thread applying these permissions.
-  ]
-}
-
-@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-module projectEntityContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
-  name: 'projectEntityContainerWriterSqlAssignmentDeploy'
-  params: {
-    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: agentUserManagedIdentity.properties.principalId
-    existingCosmosDbAccountName: existingCosmosDbAccountName
-    existingCosmosDbName: 'enterprise_memory'
-    existingCosmosCollectionTypeName: 'entities'
-    scopeUserContainerId: scopeEntityContainerId
-  }
-  dependsOn: [
-    foundry::project::aiAgentService
-    projectSystemThreadContainerWriterSqlAssignment // Single thread applying these permissions.
-  ]
-}
-
-@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-module agentDefinitionsContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
-  name: 'agentDefinitionsContainerWriterSqlAssignmentDeploy'
-  params: {
-    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: agentUserManagedIdentity.properties.principalId
-    existingCosmosDbAccountName: existingCosmosDbAccountName
-    existingCosmosDbName: 'enterprise_memory'
-    existingCosmosCollectionTypeName: 'agents'
-    scopeUserContainerId: scopeAgentDefinitionsContainerId
-  }
-  dependsOn: [
-    foundry::project::aiAgentService
-    projectEntityContainerWriterSqlAssignment // Single thread applying these permissions.
-  ]
-}
-
-@description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-module runStateContainerWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
-  name: 'runStateContainerWriterSqlAssignmentDeploy'
-  params: {
-    roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: agentUserManagedIdentity.properties.principalId
-    existingCosmosDbAccountName: existingCosmosDbAccountName
-    existingCosmosDbName: 'enterprise_memory'
-    existingCosmosCollectionTypeName: 'state'
-    scopeUserContainerId: scopeRunStateContainerId
-  }
-  dependsOn: [
-    foundry::project::aiAgentService
-    agentDefinitionsContainerWriterSqlAssignment // Single thread applying these permissions.
   ]
 }
   
