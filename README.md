@@ -244,7 +244,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    $chat_agent = Get-Content .\chat-with-bing.json -Raw | ConvertFrom-Json
 
    $chat_agent.definition.model = $MODEL_CONNECTION_NAME
-   $chat_agent.definition.tools[0].bing_grounding.search_configurations[0].connection_id = $BING_CONNECTION_ID
+   $chat_agent.definition.tools[0].bing_grounding.search_configurations[0].project_connection_id = $BING_CONNECTION_ID
 
    $chat_agent | ConvertTo-Json -Depth 10 | Set-Content .\chat-with-bing-output.json
 
