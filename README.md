@@ -257,7 +257,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    echo $AGENT_ID
    ```
 
-### 4. Publish the chat front-end web app
+### 3. Publish the chat front-end web app
 
 Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
@@ -293,7 +293,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
    ```
 
-### 5. Try it out! Test the deployed application that calls into the Foundry Agent Service
+### 4. Try it out! Test the deployed application that calls into the Foundry Agent Service
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Foundry agent API endpoint, which hosts the agent and its chat history. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
 
