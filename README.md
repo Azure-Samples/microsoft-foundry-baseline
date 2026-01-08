@@ -257,6 +257,9 @@ The AI agent definition would likely be deployed from your application's pipelin
    echo $AGENT_ID
    ```
 
+   | :warning: Network isolation limitation | The new Azure AI Foundry portal does not currently support end-to-end network isolation. If public network access is disabled as recommended from this baseline, you will be able to manage your projects through the SDK or CLI instead. For more information please take a look at [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry) |
+   | :-------: | :------------------------- |
+
 ### 3. Publish the chat front-end web app
 
 Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
