@@ -28,6 +28,7 @@ public class ChatController(
             throw new ArgumentException("Message cannot be null, empty, or whitespace.", nameof(message));
         _logger.LogDebug("Prompt received {Prompt}", message);
 
+        // MessageResponseItem is currently intended for evaluation purposes and therefore requires explicit suppression of compiler diagnostics.
         #pragma warning disable OPENAI001
         MessageResponseItem userMessageResponseItem = ResponseItem.CreateUserMessageItem(
             [ResponseContentPart.CreateInputTextPart(message)]);
