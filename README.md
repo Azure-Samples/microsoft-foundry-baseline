@@ -238,7 +238,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    ```powershell
    # Use the agent definition on disk
-   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/azure-ai-foundry-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
+   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
 
    # Update to match your environment
    $chat_agent = Get-Content .\chat-with-bing.json -Raw | ConvertFrom-Json
