@@ -225,7 +225,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    $FOUNDRY_PROJECT_NAME="projchat"
    $MODEL_CONNECTION_NAME="agent-model"
    $BING_CONNECTION_ID="$(az cognitiveservices account show -n $FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${FOUNDRY_PROJECT_NAME}/connections/${BING_CONNECTION_NAME}"
-   $FOUNDRY_AGENT_CREATE_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/assistants?api-version=2025-05-15-preview"
+   $FOUNDRY_AGENT_CREATE_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/agents?api-version=2025-11-15-preview"
 
    echo $BING_CONNECTION_ID
    echo $MODEL_CONNECTION_NAME
@@ -238,21 +238,29 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    ```powershell
    # Use the agent definition on disk
-   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/azure-ai-foundry-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
+   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
 
    # Update to match your environment
-   ${c:chat-with-bing-output.json} = ${c:chat-with-bing.json} -replace 'MODEL_CONNECTION_NAME', $MODEL_CONNECTION_NAME -replace 'BING_CONNECTION_ID', $BING_CONNECTION_ID
+   $chat_agent = Get-Content .\chat-with-bing.json -Raw | ConvertFrom-Json
+
+   $chat_agent.definition.model = $MODEL_CONNECTION_NAME
+   $chat_agent.definition.tools[0].bing_grounding.search_configurations[0].project_connection_id = $BING_CONNECTION_ID
+
+   $chat_agent | ConvertTo-Json -Depth 10 | Set-Content .\chat-with-bing-output.json
 
    # Deploy the agent
    az rest -u $FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
 
    # Capture the Agent's ID
-   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query 'data[0].id' -o tsv)"
+   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query last_id -o tsv)"
 
    echo $AGENT_ID
    ```
 
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
+
+| :warning: | The new Foundry portal experience does not currently support the end-to-end network isolation used in this architecture. Using this secured architecture, you will only be able to create and call your agents through the SDK or REST API; not interface with them in the Foundry portal. See, [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry&preserve-view=true). These intermediate testing instructions will be updated when this experience is supported. |
+| :-------: | :------------------------- |
 
 Here you'll test your orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
 
@@ -262,17 +270,17 @@ Here you'll test your orchestration agent by invoking it directly from the Found
 
    You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Access policies on your account, if this is the first time you are connecting through the jump box.
 
-1. Navigate to the Foundry project named **projchat** in your resource group and open the Foundry portal by clicking the **Go to Microsoft Foundry portal** button.
+1. Navigate to the Foundry project named **projchat** in your resource group and open the Foundry portal by clicking the **Go to Foundry portal** button.
 
    This will take you directly into the 'Chat project'. Alternatively, you can find all your Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
 
-1. Click **Agents** in the side navigation.
+1. In the upper-right corner, if not already enabled, toggle New Foundry to switch into the Microsoft Foundry (new) portal.
 
-1. Select the agent named 'Baseline Chatbot Agent'.
+1. In the top-right corner, click Build. This opens by default the Agents blade in the side navigation, where you can view the available agents and create new ones.
 
-1. Click the **Try in playground** button.
+1. Select the agent you just created from the previous step named 'baseline-chatbot-agent'.
 
-1. Enter a question that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
+1. Enter a question to the agent that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
 
 1. A grounded response to your question should appear on the UI.
 
@@ -291,7 +299,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Using the same PowerShell terminal session from previous steps, download the web UI.
 
    ```powershell
-   Invoke-WebRequest -Uri https://github.com/Azure-Samples/azure-ai-foundry-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
+   Invoke-WebRequest -Uri https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
    ```
 
 1. Upload the web application to Azure Storage, where the web app will load the code from.
@@ -395,4 +403,3 @@ Please see our [Contributor guide](./CONTRIBUTING.md).
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact <opencode@microsoft.com> with any additional questions or comments.
 
 With :heart: from Azure Patterns & Practices, [Azure Architecture Center](https://azure.com/architecture).
-

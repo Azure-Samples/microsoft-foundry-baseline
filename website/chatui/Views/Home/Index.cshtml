@@ -220,7 +220,7 @@
         }
 
         async function createThread() {
-            const response = await fetch("/chat/threads", {
+            const response = await fetch("/chat/conversations", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             });

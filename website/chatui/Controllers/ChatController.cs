@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Azure;
-using Azure.AI.Agents.Persistent;
+using Azure.AI.Projects;
+using Azure.AI.Projects.OpenAI;
+using OpenAI.Responses;
 using chatui.Configuration;
 
 namespace chatui.Controllers;
@@ -10,56 +11,52 @@ namespace chatui.Controllers;
 [Route("[controller]/[action]")]
 
 public class ChatController(
-    PersistentAgentsClient client,
+    AIProjectClient projectClient,
     IOptionsMonitor<ChatApiOptions> options,
     ILogger<ChatController> logger) : ControllerBase
 {
-    private readonly PersistentAgentsClient _client = client;
+    private readonly AIProjectClient _projectClient = projectClient;
     private readonly IOptionsMonitor<ChatApiOptions> _options = options;
     private readonly ILogger<ChatController> _logger = logger;
 
-    // TODO: [security] Do not trust client to provide threadId. Instead map current user to their active threadid in your application's own state store.
-    // Without this security control in place, a user can inject messages into another user's thread.
-    [HttpPost("{threadId}")]
-    public async Task<IActionResult> Completions([FromRoute] string threadId, [FromBody] string prompt)
+    // TODO: [security] Do not trust client to provide conversationId. Instead map current user to their active conversationId in your application's own state store.
+    // Without this security control in place, a user can inject messages into another user's conversation.
+    [HttpPost("{conversationId}")]
+    public async Task<IActionResult> Completions([FromRoute] string conversationId, [FromBody] string message)
     {
-        if (string.IsNullOrWhiteSpace(prompt))
-            throw new ArgumentException("Prompt cannot be null, empty, or whitespace.", nameof(prompt));
+        if (string.IsNullOrWhiteSpace(message))
+            throw new ArgumentException("Message cannot be null, empty, or whitespace.", nameof(message));
+        _logger.LogDebug("Prompt received {Prompt}", message);
 
-        _logger.LogDebug("Prompt received {Prompt}", prompt);
+        // MessageResponseItem is currently intended for evaluation purposes and therefore requires explicit suppression of compiler diagnostics.
+        #pragma warning disable OPENAI001
+        MessageResponseItem userMessageResponseItem = ResponseItem.CreateUserMessageItem(
+            [ResponseContentPart.CreateInputTextPart(message)]);
+
         var _config = _options.CurrentValue;
+        AgentRecord agentRecord = await _projectClient.Agents.GetAgentAsync(_config.AIAgentId);
+        var agent = agentRecord.Versions.Latest;
 
-        PersistentThreadMessage message = await _client.Messages.CreateMessageAsync(
-            threadId,
-            MessageRole.User,
-            prompt);
+        ProjectResponsesClient responsesClient
+            = _projectClient.OpenAI.GetProjectResponsesClientForAgent(agent, conversationId);
 
-        ThreadRun run = await _client.Runs.CreateRunAsync(threadId, _config.AIAgentId);
+        var agentResponseItem = await responsesClient.CreateResponseAsync([userMessageResponseItem]);
 
-        while (run.Status == RunStatus.Queued || run.Status == RunStatus.InProgress || run.Status == RunStatus.RequiresAction)
-        {
-            await Task.Delay(TimeSpan.FromMilliseconds(500));
-            run = (await _client.Runs.GetRunAsync(threadId, run.Id)).Value;
-        }
-
-        Pageable<PersistentThreadMessage> messages = _client.Messages.GetMessages(
-            threadId: threadId, order: ListSortOrder.Ascending);
-
-        var fullText =
-            messages
-                .Where(m => m.Role == MessageRole.Agent)
-                .SelectMany(m => m.ContentItems.OfType<MessageTextContent>())
-                .Last().Text;
+        var fullText = agentResponseItem.Value.GetOutputText();
 
         return Ok(new { data = fullText });
     }
 
     [HttpPost]
-    public async Task<IActionResult> Threads()
+    public async Task<IActionResult> Conversations()
     {
-        // TODO [performance efficiency] Delay creating a thread until the first user message arrives.
-        PersistentAgentThread thread = await _client.Threads.CreateThreadAsync();
+        // TODO [performance efficiency] Delay creating a conversation until the first user message arrives.
+        ProjectConversationCreationOptions conversationOptions = new();
 
-        return Ok(new { id = thread.Id });
+        ProjectConversation conversation
+                = await _projectClient.OpenAI.Conversations.CreateProjectConversationAsync(
+                    conversationOptions);
+
+        return Ok(new { id = conversation.Id });
     }
 }

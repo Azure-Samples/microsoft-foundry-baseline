@@ -1,6 +1,6 @@
 {
     "name": "Foundry Agent Service chat baseline reference implementation",
-    "image": "mcr.microsoft.com/devcontainers/dotnet:dev-8.0-jammy",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:dev-10.0",
     "runArgs": ["--network=host"],
     "remoteUser": "vscode",
     "features": {
@@ -13,7 +13,7 @@
                 "ms-azuretools.vscode-bicep"
             ],
             "settings": {}
-        }  
+        }
     },
     "forwardPorts": []
 }

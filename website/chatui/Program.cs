@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using Azure.AI.Agents.Persistent;
+using Azure.AI.Projects;
 using Azure.Identity;
 using chatui.Configuration;
 
@@ -13,9 +13,9 @@ builder.Services.AddOptions<ChatApiOptions>()
 builder.Services.AddSingleton((provider) =>
 {
     var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
-    PersistentAgentsClient client = new(config.AIProjectEndpoint, new DefaultAzureCredential());
+    AIProjectClient projectClient = new(new Uri(config.AIProjectEndpoint), new DefaultAzureCredential());
 
-    return client;
+    return projectClient;
 });
 
 builder.Services.AddControllersWithViews();
