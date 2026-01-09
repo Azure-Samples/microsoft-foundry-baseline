@@ -257,8 +257,32 @@ The AI agent definition would likely be deployed from your application's pipelin
    echo $AGENT_ID
    ```
 
-   | :warning: | The new Azure AI Foundry portal does not currently support end-to-end network isolation. If public network access is disabled as recommended from this baseline, you will be able to create your agents through the SDK or REST instead. For more information please take a look at [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry) |
-   | :-------: | :------------------------- |
+### 3. Test the agent from the Foundry portal in the playground. *Optional.*
+
+| :warning: | The new Azure AI Foundry portal does not currently support end-to-end network isolation. If public network access is disabled as recommended from this baseline, you will be able to create your agents through the SDK or REST instead. For more information please take a look at [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry) |
+| :-------: | :------------------------- |
+
+Here you'll test your orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
+
+*This step testing step is completely optional.*
+
+1. Open the Azure portal to your subscription.
+
+   You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Access policies on your account, if this is the first time you are connecting through the jump box.
+
+1. Navigate to the Foundry project named **projchat** in your resource group and open the Foundry portal by clicking the **Go to Foundry portal** button.
+
+   This will take you directly into the 'Chat project'. Alternatively, you can find all your Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
+
+1. In the upper-right corner, if not already enabled, toggle New Foundry to switch into the Microsoft Foundry (new) portal.
+
+1. In the top-right corner, click Build. This opens by default the Agents blade in the side navigation, where you can view the available agents and create new ones.
+
+1. Select the agent you just created from the previous step named 'baseline-chatbot-agent'.
+
+1. Enter a question to the agent that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
+
+1. A grounded response to your question should appear on the UI.
 
 ### 4. Publish the chat front-end web app
 
