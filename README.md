@@ -259,7 +259,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
 
-| :warning: | The new Azure AI Foundry portal does not currently support end-to-end network isolation. If public network access is disabled as recommended from this baseline, you will be able to create your agents through the SDK or REST instead. For more information please take a look at [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry) |
+| :warning: | The new Foundry portal experience does not currently support the end-to-end network isolation used in this architecture. Using this secured architecture, you will only be able to create and call your agents through the SDK or REST API; not interface with them in the Foundry portal. See, [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry&preserve-view=true). These intermediate testing instructions will be updated when this experience is supported. |
 | :-------: | :------------------------- |
 
 Here you'll test your orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
