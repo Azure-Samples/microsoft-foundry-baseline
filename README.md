@@ -225,16 +225,16 @@ The AI agent definition would likely be deployed from your application's pipelin
    $FOUNDRY_PROJECT_NAME="projchat"
    $MODEL_CONNECTION_NAME="agent-model"
    $BING_CONNECTION_ID="$(az cognitiveservices account show -n $FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${FOUNDRY_PROJECT_NAME}/connections/${BING_CONNECTION_NAME}"
-   $FOUNDRY_AGENT_CREATE_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/agents?api-version=2025-11-15-preview"
+   $FOUNDRY_AGENT_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/agents?api-version=2025-11-15-preview"
 
    echo $BING_CONNECTION_ID
    echo $MODEL_CONNECTION_NAME
-   echo $FOUNDRY_AGENT_CREATE_URL
+   echo $FOUNDRY_AGENT_URL
    ```
 
-1. Deploy the agent.
+1. Create the agent.
 
-   *This step simulates deploying an AI agent through your pipeline from a network-connected build agent.*
+   *This step provisions a long-lived AI agent from your jump box that act as a network-connected build agent to help simulating your pipeline.*
 
    ```powershell
    # Use the agent definition on disk
@@ -248,14 +248,46 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    $chat_agent | ConvertTo-Json -Depth 10 | Set-Content .\chat-with-bing-output.json
 
-   # Deploy the agent
-   az rest -u $FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
+   # Persist the agent
+   az rest -u $FOUNDRY_AGENT_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
 
    # Capture the Agent's ID
-   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query last_id -o tsv)"
+   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_URL -m 'get' --resource 'https://ai.azure.com' --query last_id -o tsv)"
 
    echo $AGENT_ID
    ```
+
+   | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation and has the unpublished state. |
+   | :-------: | :------------------------- |
+
+1. Publish the the Agent
+
+   *This step publishes the agent by creating a new application within the Foundry project and a corresponding deployment that references a specific agent version.*
+
+   ```bash
+   az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
+      -g $RESOURCE_GROUP \
+      -n 'foundryAppDeploy' \
+      -p baseName=${BASE_NAME}
+   ```
+
+   | :information: | As a result, the agent is assigned its own Agent Identity and becomes a nested Azure resource visible in the Azure control plane. |
+   | :-------: | :------------------------- |
+
+1. Verify the agent deployment is running
+
+   *This step verify the Foundry AI Agent Service deployment is runnning by invoking the agent application's responses endpoint.*
+
+   ```powershell
+   $AGENT_BASE_URL="$(az deployment group show -g $RESOURCE_GROUP -n 'foundryAppDeploy' --query "properties.outputs.agentApplicationBaseUrl.value" -o tsv)"
+
+   $AGENT_RESPONSES_URL="${AGENT_BASE_URL}/protocols/openai/responses?api-version=2025-11-15-preview"
+
+   az rest -u $AGENT_RESPONSES_URL -m "post" --resource "https://ai.azure.com" -b '{"input":"Say hello"}' --query "{agent:agent.name, agent_version:agent.version,output:output[0].content[0].text}"
+   ```
+
+   | :information: | The terminal displays the agent application’s response, verifying that the specified agent version is running inside the deployment. |
+   | :--------: | :------------------------- |
 
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
 
