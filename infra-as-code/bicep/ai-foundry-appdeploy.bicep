@@ -23,7 +23,7 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
 
     @description('Create agent application in Foundry Agent Service.')
     resource application 'applications' = {
-      name: 'baseline-chatbot-agent'
+      name: 'appchat'
       properties: {
         agents: [
           {
@@ -34,7 +34,7 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
         authorizationPolicy: {
           authorizationScheme: 'Default'
         }
-        displayName: 'baseline-chatbot-agent'
+        displayName: 'Example of an Agent Application that exposes a Foundry agent chat interface through a service endpoint'
         trafficRoutingPolicy: {
           protocol: 'FixedRatio'
           rules: [
@@ -50,7 +50,7 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
 
       @description('Create agent application deployment in Foundry Agent Service.')
       resource deploymentApp 'agentDeployments' = {
-        name: 'baseline-chatbot-agent'
+        name: 'agentdeploychat'
         properties: {
           agents: [
             {
@@ -58,7 +58,7 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
               agentVersion: agentVersion
             }
           ]
-          displayName: 'baseline-chatbot-agent'
+          displayName: 'Example of an agent deployment that runs an Agent Application referencing a specific agent version.'
           deploymentType: 'Managed' // prompt-based agent deployment
           protocols: [
             {
