@@ -234,7 +234,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 1. Create the agent.
 
-   *This step provisions a long-lived AI agent from your jump box that act as a network-connected build agent to help simulating your pipeline.*
+   *This step provisions a long-lived AI agent from your jump box. This simulates a network-connected build agent performing in your pipeline.*
 
    ```powershell
    # Use the agent definition on disk
