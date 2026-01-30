@@ -283,7 +283,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    $AGENT_RESPONSES_URL="${AGENT_BASE_URL}/protocols/openai/responses?api-version=2025-11-15-preview"
 
-   az rest -u $AGENT_RESPONSES_URL -m "post" --resource "https://ai.azure.com" -b '{"input":"Say hello"}' --query "{agent:agent.name, agent_version:agent.version,output:output[0].content[0].text}"
+   az rest -u $AGENT_RESPONSES_URL -m "post" --resource "https://ai.azure.com" -b '{\"input\": \"Say hello\"}' --query "{agent:agent.name, agent_version:agent.version,output:output[-1].content[0].text}"
    ```
 
    | :information: | The terminal displays the agent application’s response, verifying that the specified agent version is running inside the deployment. |
