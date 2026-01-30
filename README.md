@@ -257,7 +257,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    echo $AGENT_ID
    ```
 
-   | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation and has the unpublished state. |
+   | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
    | :-------: | :------------------------- |
 
 1. Publish the the Agent
@@ -271,7 +271,7 @@ The AI agent definition would likely be deployed from your application's pipelin
       -p baseName=${BASE_NAME}
    ```
 
-   | :information: | As a result, the agent is assigned its own Agent Identity and becomes a nested Azure resource visible in the Azure control plane. |
+   | :information: | As a result, the agent becomes a nested Azure resource visible in the Azure control plane. Publishing the chat agent automatically created a dedicated agent identity blueprint and agent identity. Both are bound to the Azure Foundry application resource. This distinct identity represents the chat agent's system authority for accessing its own resources. Reassigning RBAC permissions was required so the new agent identity get permissions to access the conversation, vector store and storage resources. At this deployment time, it was a great moment to reassess only the permissions the agent needs for its tool actions. |
    | :-------: | :------------------------- |
 
 1. Verify the agent deployment is running
