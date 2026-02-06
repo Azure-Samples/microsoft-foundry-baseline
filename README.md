@@ -339,6 +339,47 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | The terminal displays the agent application’s response, verifying that the specified agent version is running inside the deployment. |
    | :--------: | :------------------------- |
 
+1. Route traffic to a specific agent deployment. *Optional.*
+
+   An Agent Application exposes a single stable endpoint that all consumers use. By default, when the `trafficRoutingPolicy` has an empty `deploymentId`, all traffic is routed to the most recently created or updated deployment. If you deployed multiple agent versions, you can explicitly control which deployment receives traffic by updating the application’s `trafficRoutingPolicy` with a specific `deploymentId`.
+
+   | :information: | This is a control plane operation, not a data plane operation. You can perform it from outside the private network — no jump box required. This separation is by design: infrastructure provisioning (Bicep) handles creating applications and deployments, while traffic routing is a Day 2 operational concern managed independently via the management API. |
+   | :--------: | :------------------------- |
+
+   Use the `deploymentId` values from the verification step above to route traffic to a specific deployment. First, extract the `deploymentId` for the target version:
+
+   ```powershell
+   # Extract the deploymentId for the target agent version (change the agentVersion value to target a different version)
+   $TARGET_AGENT_VERSION="1"
+   $SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
+   $FOUNDRY_APP_URL="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.CognitiveServices/accounts/aif${BASE_NAME}/projects/${FOUNDRY_PROJECT_NAME}/applications/appchat"
+
+   $TARGET_DEPLOYMENT_ID="$(az rest -u "${FOUNDRY_APP_URL}/agentDeployments?api-version=2025-10-01-preview" -m "get" --query "value[?properties.agents[0].agentVersion=='${TARGET_AGENT_VERSION}'].properties.deploymentId | [0]" -o tsv)"
+
+   echo $TARGET_DEPLOYMENT_ID
+   ```
+
+   Then, update the application's traffic routing policy to direct all traffic to that deployment:
+
+   ```powershell
+   az rest -u "${FOUNDRY_APP_URL}?api-version=2025-10-01-preview" -m "PUT" `
+     -b "{\`"properties\`":{\`"displayName\`":\`"Example of an Agent Application that exposes a Foundry agent chat interface through a service endpoint\`",\`"agents\`":[{\`"agentName\`":\`"baseline-chatbot-agent\`"}],\`"authorizationPolicy\`":{\`"authorizationScheme\`":\`"Default\`"},\`"trafficRoutingPolicy\`":{\`"protocol\`":\`"FixedRatio\`",\`"rules\`":[{\`"deploymentId\`":\`"${TARGET_DEPLOYMENT_ID}\`",\`"description\`":\`"Route all traffic to v${TARGET_AGENT_VERSION}\`",\`"ruleId\`":\`"default\`",\`"trafficPercentage\`":100}]}}}" `
+     --query "properties.trafficRoutingPolicy"
+   ```
+
+   After updating, invoke the agent again from the jump box to confirm that the response now comes from the targeted agent version.
+
+   To restore the default behavior (route to the latest deployment), run the same command with an empty `deploymentId`:
+
+   ```powershell
+   az rest -u "${FOUNDRY_APP_URL}?api-version=2025-10-01-preview" -m "PUT" `
+     -b "{\`"properties\`":{\`"displayName\`":\`"Example of an Agent Application that exposes a Foundry agent chat interface through a service endpoint\`",\`"agents\`":[{\`"agentName\`":\`"baseline-chatbot-agent\`"}],\`"authorizationPolicy\`":{\`"authorizationScheme\`":\`"Default\`"},\`"trafficRoutingPolicy\`":{\`"protocol\`":\`"FixedRatio\`",\`"rules\`":[{\`"deploymentId\`":\`"\`",\`"description\`":\`"Default rule routing all traffic\`",\`"ruleId\`":\`"default\`",\`"trafficPercentage\`":100}]}}}" `
+     --query "properties.trafficRoutingPolicy"
+   ```
+
+   | :warning: | Currently, Foundry Agent Service requires 100% of traffic to be routed to a single deployment. A/B traffic splitting (e.g., 50/50 between v1 and v2) is not yet supported. Additionally, path-based or header-based routing to a specific deployment is not available — the application endpoint does not expose deployment-level sub-paths. The `PUT` method must be used; `PATCH` is not supported for this resource. |
+   | :-------: | :------------------------- |
+
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
 
 | :warning: | The new Foundry portal experience does not currently support the end-to-end network isolation used in this architecture. Using this secured architecture, you will only be able to create and call your agents through the SDK or REST API; not interface with them in the Foundry portal. See, [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry&preserve-view=true). These intermediate testing instructions will be updated when this experience is supported. |
