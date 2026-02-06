@@ -260,23 +260,73 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
    | :-------: | :------------------------- |
 
+1. Persist Agent v2 (Optional)
+
+   *This step creates a second version of the agent with different instructions. New versions are created by posting to the agent-specific versions endpoint. This is useful for A/B testing or gradual rollouts.*
+
+   ```powershell
+   # Use the v2 agent definition (has concise response instructions)
+   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/agents/chat-with-bing-v2.json" -OutFile "chat-with-bing-v2.json"
+
+   # Update to match your environment
+   $chat_agent_v2 = Get-Content .\chat-with-bing-v2.json -Raw | ConvertFrom-Json
+
+   $chat_agent_v2.definition.model = $MODEL_CONNECTION_NAME
+   $chat_agent_v2.definition.tools[0].bing_grounding.search_configurations[0].project_connection_id = $BING_CONNECTION_ID
+
+   $chat_agent_v2 | ConvertTo-Json -Depth 10 | Set-Content .\chat-with-bing-v2-output.json
+
+   # Persist agent v2 (post to agent-specific versions endpoint)
+   $FOUNDRY_AGENT_VERSIONS_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/agents/baseline-chatbot-agent/versions?api-version=2025-11-15-preview"
+   az rest -u $FOUNDRY_AGENT_VERSIONS_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-v2-output.json
+   ```
+
+   | :information: | New agent versions are created by posting to the `/agents/{agent-name}/versions` endpoint. The v2 instructions tell the agent to keep responses concise (2-3 sentences), making it easy to distinguish v1 vs v2 behavior when testing. |
+   | :-------: | :------------------------- |
+
 1. Publish the the Agent
 
-   *This step publishes the agent by creating a new application within the Foundry project and a corresponding deployment that references a specific agent version.*
+   *This step publishes the agent by creating a new application within the Foundry project and a corresponding deployment that references a specific agent version. The deployment name is auto-suffixed with the version (e.g., `agentdeploychatv1`).*
 
    ```bash
+   # Deploy version 1 (default)
    az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
       -g $RESOURCE_GROUP \
-      -n 'foundryAppDeploy' \
-      -p baseName=${BASE_NAME}
+      -n 'foundryAppDeployV1' \
+      -p baseName=${BASE_NAME} \
+      -p agentVersion='1'
+   ```
+
+   To deploy additional versions (e.g., v2), run the same command with a different `agentVersion`:
+
+   ```bash
+   # Deploy version 2
+   az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
+      -g $RESOURCE_GROUP \
+      -n 'foundryAppDeployV2' \
+      -p baseName=${BASE_NAME} \
+      -p agentVersion='2'
    ```
 
    | :information: | As a result, the agent becomes a nested Azure resource visible in the Azure control plane. Publishing the chat agent automatically created a dedicated agent identity blueprint and agent identity. Both are bound to the Azure Foundry application resource. This distinct identity represents the chat agent's system authority for accessing its own resources. Reassigning RBAC permissions was required so the new agent identity get permissions to access the conversation, vector store and storage resources. At this deployment time, it was a great moment to reassess only the permissions the agent needs for its tool actions. |
    | :-------: | :------------------------- |
 
-1. Verify the agent deployment is running
+1. Verify the agent deployments are running
 
-   *This step verify the Foundry AI Agent Service deployment is runnning by invoking the agent application's responses endpoint.*
+   *This step lists all agent deployments under the application and confirms their state. If you deployed multiple versions, you should see each one listed.*
+
+   ```powershell
+   $SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
+   $FOUNDRY_APP_DEPLOYMENTS_URL="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.CognitiveServices/accounts/aif${BASE_NAME}/projects/${FOUNDRY_PROJECT_NAME}/applications/appchat/agentDeployments?api-version=2025-10-01-preview"
+
+   az rest -u $FOUNDRY_APP_DEPLOYMENTS_URL -m "get" --query "value[].{name:name, deploymentId:properties.deploymentId, state:properties.state, agents:properties.agents}"
+   ```
+
+   You should see each deployment with a `Running` state and its associated agent version. For example, if you deployed both v1 and v2, you should see two entries: `agentdeploychatv1` and `agentdeploychatv2`.
+
+1. Invoke the agent deployment
+
+   *This step invokes the Foundry AI Agent Service deployment by calling the agent application's responses endpoint.*
 
    ```powershell
    $AGENT_BASE_URL="$(az deployment group show -g $RESOURCE_GROUP -n 'foundryAppDeploy' --query "properties.outputs.agentApplicationBaseUrl.value" -o tsv)"

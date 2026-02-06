@@ -103,7 +103,7 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
 
       @description('Create agent application deployment in Foundry Agent Service.')
       resource deploymentApp 'agentDeployments' = {
-        name: 'agentdeploychat'
+        name: 'agentdeploychatv${agentVersion}'
         properties: {
           agents: [
             {
@@ -111,7 +111,7 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
               agentVersion: agentVersion
             }
           ]
-          displayName: 'Example of an agent deployment that runs an Agent Application referencing a specific agent version.'
+          displayName: 'Agent deployment v${agentVersion} that runs an Agent Application referencing a specific agent version.'
           deploymentType: 'Managed' // prompt-based agent deployment
           protocols: [
             {
