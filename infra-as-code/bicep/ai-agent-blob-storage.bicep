@@ -22,25 +22,10 @@ param logAnalyticsWorkspaceName string
 @minLength(1)
 param privateEndpointSubnetResourceId string
 
-@description('The existing User Managed Identity for the Foundry project.')
-@minLength(1)
-param existingAgentUserManagedIdentityName string
-
 // ---- Existing resources ----
-
-@description('Existing Agent User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
-  name: existingAgentUserManagedIdentityName
-}
 
 resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
-  scope: subscription()
-}
-
-// Storage Blob Data Contributor
-resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   scope: subscription()
 }
 
@@ -108,16 +93,6 @@ resource debugUserBlobDataOwnerAssignment 'Microsoft.Authorization/roleAssignmen
     principalId: debugUserPrincipalId
     roleDefinitionId: storageBlobDataOwnerRole.id
     principalType: 'User'
-  }
-}
-
-@description('Grant the Foundry project managed identity Storage Account Blob Data Contributor user role permissions.')
-module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignment.bicep' = {
-  name: 'projectBlobDataContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: storageBlobDataContributorRole.id
-    principalId: agentUserManagedIdentity.properties.principalId
-    existingStorageAccountName: agentStorageAccount.name
   }
 }
 

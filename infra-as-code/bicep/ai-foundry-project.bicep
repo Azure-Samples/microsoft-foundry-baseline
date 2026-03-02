@@ -28,10 +28,6 @@ param existingBingAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-@description('The existing User Managed Identity for the Foundry project.')
-@minLength(1)
-param existingAgentUserManagedIdentityName string
-
 // ---- Existing resources ----
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
@@ -105,6 +101,10 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
   resource project 'projects' = {
     name: 'projchat'
     location: location
+    // This project uses a System Assigned Managed Identity instead of a User Assigned Managed Identity.
+    // At the time of this writing, the Foundry Agent Service does not support application creation when
+    // the project is configured with a User Assigned Managed Identity. When UMI support becomes available,
+    // consider reverting to UserAssigned to align with identity best practices for this architecture.
     identity: {
       type: 'SystemAssigned'
     }
@@ -227,7 +227,10 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
   }
 }
 
-// Role assignments
+// Role assignments for the Foundry project's System Assigned Managed Identity.
+// These grants are required because the project uses SystemAssigned identity (see identity note above).
+// When reverting to UserAssigned, replace 'foundry::project.identity.principalId' with the UMI principal
+// and restore the UMI role assignments that were removed from the dependency modules.
 
 @description('Grant the Foundry project managed identity Storage Account Blob Data Contributor user role permissions.')
 module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignment.bicep' = {
