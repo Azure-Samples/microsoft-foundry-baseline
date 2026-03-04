@@ -86,7 +86,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - App Service Plans: P1v3 (AZ), 3 instances
     - Azure AI Search (S - Standard): 1
     - Azure Cosmos DB: 1 account
-    - OpenAI model: GPT-4o model deployment with 50k tokens per minute (TPM) capacity
+    - OpenAI model: GPT-4.1 model deployment with 50k tokens per minute (TPM) capacity
     - DDoS Protection Plans: 1
     - Public IPv4 Addresses - Standard: 4
     - Standard DSv3 Family vCPU: 2
