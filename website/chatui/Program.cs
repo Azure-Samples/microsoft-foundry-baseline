@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using Azure.AI.Projects;
+using Azure.AI.OpenAI;
 using Azure.Identity;
 using chatui.Configuration;
 
@@ -10,12 +10,20 @@ builder.Services.AddOptions<ChatApiOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-builder.Services.AddSingleton((provider) =>
+builder.Services.AddSingleton(provider =>
 {
     var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
-    AIProjectClient projectClient = new(new Uri(config.AIProjectEndpoint), new DefaultAzureCredential());
+    // The GA SDK falls through to the base ResponsesClient which appends /responses
+    // to the endpoint but adds neither /openai nor ?api-version. We construct the
+    // endpoint up to /protocols/openai with the required api-version, then the SDK
+    // appends /responses to produce the correct Foundry URL:
+    //   {AgentBaseUrl}/protocols/openai/responses?api-version={AgentApiVersion}
+    var endpoint = new Uri($"{config.AgentBaseUrl.TrimEnd('/')}/protocols/openai?api-version={config.AgentApiVersion}");
+    var options = new AzureOpenAIClientOptions { Audience = "https://ai.azure.com" };
+    AzureOpenAIClient azureClient = new(endpoint, new DefaultAzureCredential(), options);
 
-    return projectClient;
+    #pragma warning disable OPENAI001 // Responses API is in preview
+    return azureClient.GetResponsesClient();
 });
 
 builder.Services.AddControllersWithViews();

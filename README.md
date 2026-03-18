@@ -340,10 +340,10 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az storage blob upload -f chatui.zip --account-name "stwebapp${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
-1. Update the app configuration to use the agent you deployed.
+1. Update the app configuration to use the published agent application endpoint.
 
    ```powershell
-   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
+   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AgentBaseUrl="${AGENT_BASE_URL}"
    ```
 
 1. Restart the web app to load the site code and its updated configuation.
@@ -354,7 +354,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 
 ### 5. Try it out! Test the deployed application that calls into the Foundry Agent Service
 
-This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Foundry agent API endpoint, which hosts the agent and its chat history. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the published agent application endpoint. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
 
 | :computer: | Unless otherwise noted, the following steps are all performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
