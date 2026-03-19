@@ -346,10 +346,11 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AgentBaseUrl="${AGENT_BASE_URL}"
    ```
 
-1. Restart the web app to load the site code and its updated configuation.
+1. Stop and start the web app to load the site code, its updated configuration, and acquire a fresh authentication token.
 
    ```powershell
-   az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   az webapp stop --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   az webapp start --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
    ```
 
 ### 5. Try it out! Test the deployed application that calls into the Foundry Agent Service

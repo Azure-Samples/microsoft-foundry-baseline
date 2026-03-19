@@ -225,8 +225,6 @@ module deployWebApp 'web-app.bicep' = {
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     existingWebAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
-    existingFoundryResourceName: deployFoundry.outputs.foundryName
-    existingFoundryProjectName: deployFoundryProject.outputs.aiAgentProjectName
   }
 }
 
