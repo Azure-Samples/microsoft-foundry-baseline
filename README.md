@@ -334,6 +334,22 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    Invoke-WebRequest -Uri https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
    ```
 
+1. *(Recommended)* Verify the integrity of the downloaded zip file before uploading.
+
+   From your **local workstation** (bash):
+
+   ```bash
+   sha256sum website/chatui.zip
+   ```
+
+   From the **jump box** (PowerShell):
+
+   ```powershell
+   (Get-FileHash chatui.zip -Algorithm SHA256).Hash
+   ```
+
+   Both outputs should match the same SHA-256 hash.
+
 1. Upload the web application to Azure Storage, where the web app will load the code from.
 
    ```powershell
