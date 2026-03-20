@@ -334,27 +334,44 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    Invoke-WebRequest -Uri https://github.com/Azure-Samples/microsoft-foundry-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
    ```
 
+1. *(Recommended)* Verify the integrity of the downloaded zip file before uploading.
+
+   From your **local workstation** (bash):
+
+   ```bash
+   sha256sum website/chatui.zip
+   ```
+
+   From the **jump box** (PowerShell):
+
+   ```powershell
+   (Get-FileHash chatui.zip -Algorithm SHA256).Hash
+   ```
+
+   Both outputs should match the same SHA-256 hash.
+
 1. Upload the web application to Azure Storage, where the web app will load the code from.
 
    ```powershell
    az storage blob upload -f chatui.zip --account-name "stwebapp${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
-1. Update the app configuration to use the agent you deployed.
+1. Update the app configuration to use the published agent application endpoint.
 
    ```powershell
-   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
+   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AgentBaseUrl="${AGENT_BASE_URL}"
    ```
 
-1. Restart the web app to load the site code and its updated configuation.
+1. Stop and start the web app to load the site code, its updated configuration, and acquire a fresh authentication token.
 
    ```powershell
-   az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   az webapp stop --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   az webapp start --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
    ```
 
 ### 5. Try it out! Test the deployed application that calls into the Foundry Agent Service
 
-This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Foundry agent API endpoint, which hosts the agent and its chat history. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the published agent application endpoint. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
 
 | :computer: | Unless otherwise noted, the following steps are all performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |

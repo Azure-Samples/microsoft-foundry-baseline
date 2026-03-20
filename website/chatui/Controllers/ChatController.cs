@@ -1,62 +1,44 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Azure.AI.Projects;
-using Azure.AI.Projects.OpenAI;
 using OpenAI.Responses;
 using chatui.Configuration;
 
 namespace chatui.Controllers;
 
+#pragma warning disable OPENAI001 // Responses API is in preview
+
 [ApiController]
 [Route("[controller]/[action]")]
 
 public class ChatController(
-    AIProjectClient projectClient,
+    ResponsesClient responsesClient,
     IOptionsMonitor<ChatApiOptions> options,
     ILogger<ChatController> logger) : ControllerBase
 {
-    private readonly AIProjectClient _projectClient = projectClient;
+    private readonly ResponsesClient _responsesClient = responsesClient;
     private readonly IOptionsMonitor<ChatApiOptions> _options = options;
     private readonly ILogger<ChatController> _logger = logger;
 
-    // TODO: [security] Do not trust client to provide conversationId. Instead map current user to their active conversationId in your application's own state store.
-    // Without this security control in place, a user can inject messages into another user's conversation.
-    [HttpPost("{conversationId}")]
-    public async Task<IActionResult> Completions([FromRoute] string conversationId, [FromBody] string message)
+    [HttpPost]
+    public async Task<IActionResult> Responses([FromBody] ResponsesRequest request)
     {
-        if (string.IsNullOrWhiteSpace(message))
-            throw new ArgumentException("Message cannot be null, empty, or whitespace.", nameof(message));
-        _logger.LogDebug("Prompt received {Prompt}", message);
+        if (request.Messages is not { Length: > 0 })
+            throw new ArgumentException("At least one message is required.");
+        _logger.LogDebug("Prompt received {Prompt}", request.Messages[^1].Content);
 
-        // MessageResponseItem is currently intended for evaluation purposes and therefore requires explicit suppression of compiler diagnostics.
-        #pragma warning disable OPENAI001
-        MessageResponseItem userMessageResponseItem = ResponseItem.CreateUserMessageItem(
-            [ResponseContentPart.CreateInputTextPart(message)]);
+        var items = request.Messages.Select(m => m.Role switch
+        {
+            "user" => ResponseItem.CreateUserMessageItem(m.Content),
+            "assistant" => ResponseItem.CreateAssistantMessageItem(m.Content),
+            _ => throw new ArgumentException($"Unsupported message role: {m.Role}")
+        }).ToList();
 
-        var _config = _options.CurrentValue;
-        AgentRecord agentRecord = await _projectClient.Agents.GetAgentAsync(_config.AIAgentId);
-        var agent = agentRecord.Versions.Latest;
-
-        ProjectResponsesClient responsesClient
-            = _projectClient.OpenAI.GetProjectResponsesClientForAgent(agent, conversationId);
-
-        var agentResponseItem = await responsesClient.CreateResponseAsync([userMessageResponseItem]);
-
-        var fullText = agentResponseItem.Value.GetOutputText();
+        var response = await _responsesClient.CreateResponseAsync(model: _options.CurrentValue.AgentModelDeploymentName, items);
+        var fullText = response.Value.GetOutputText();
 
         return Ok(new { data = fullText });
     }
-
-    [HttpPost]
-    public async Task<IActionResult> Conversations()
-    {
-        // TODO [performance efficiency] Delay creating a conversation until the first user message arrives.
-        ProjectConversationCreationOptions conversationOptions = new();
-
-        ProjectConversation conversation
-                = await _projectClient.OpenAI.Conversations.CreateProjectConversationAsync(
-                    conversationOptions);
-
-        return Ok(new { id = conversation.Id });
-    }
 }
+
+public record ChatMessage(string Role, string Content);
+public record ResponsesRequest(ChatMessage[] Messages);

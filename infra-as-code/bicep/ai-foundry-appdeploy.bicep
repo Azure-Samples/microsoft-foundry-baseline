@@ -11,6 +11,17 @@ param agentVersion string = '1'
 
 // ---- Existing resources ----
 
+@description('Built-in Role: [Azure AI User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
+resource azureAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '53ca6127-db72-4b80-b1b0-d745d6d5456d'
+  scope: subscription()
+}
+
+@description('Existing App Service managed identity. Needs Azure AI User role on the Agent Application to invoke the published agent.')
+resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
+  name: 'id-app-${baseName}'
+}
+
 // Storage Blob Data Owner Role
 resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
@@ -201,6 +212,17 @@ module agentContainersWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.b
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'containers'
     scopeUserContainerId: scopeAllContainers
+  }
+}
+
+@description('Grant the App Service managed identity Azure AI User role on the Agent Application so it can invoke the published agent via the Responses API.')
+resource azureAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: foundry::project::application
+  name: guid(foundry::project::application.id, appServiceManagedIdentity.id, azureAiUserRole.id)
+  properties: {
+    roleDefinitionId: azureAiUserRole.id
+    principalType: 'ServicePrincipal'
+    principalId: appServiceManagedIdentity.properties.principalId
   }
 }
 

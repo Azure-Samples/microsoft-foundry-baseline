@@ -41,13 +41,6 @@ param existingWebAppDeploymentStorageAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-@description('The name of the existing Microsoft Foundry instance that the Azure Web App code will be calling for Foundry Agent Service agents.')
-@minLength(2)
-param existingFoundryResourceName string
-
-@description('The name of the existing Foundry project name.')
-@minLength(2)
-param existingFoundryProjectName string
 
 // variables
 var appName = 'app-${baseName}'
@@ -85,30 +78,8 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
   scope: subscription()
 }
 
-@description('Built-in Role: [Azure AI User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
-resource azureAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '53ca6127-db72-4b80-b1b0-d745d6d5456d'
-  scope: subscription()
-}
-
-// If your web app/API code is going to be creating agents dynamically, you will need to assign a role such as this to App Service managed identity.
-/*@description('Built-in Role: [Azure AI Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
-resource azureAiProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: 'eadc314b-1a2d-4efa-be10-5d325db5065e'
-  scope: subscription()
-}*/
-
 resource appServiceExistingPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   name: 'privatelink.azurewebsites.net'
-}
-
-@description('Existing Foundry account. This account is where the agents hosted in Foundry Agent Service will be deployed. The web app code calls to these agents.')
-resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' existing = {
-  name: existingFoundryResourceName
-
-  resource project 'projects' existing = {
-    name: existingFoundryProjectName
-  }
 }
 
 // ---- New resources ----
@@ -129,28 +100,6 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
     principalId: appServiceManagedIdentity.properties.principalId
   }
 }
-
-@description('Grant the App Service managed identity Azure AI user role permission so it can call into the Foundry-hosted agent.')
-resource azureAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: foundry
-  name: guid(foundry.id, appServiceManagedIdentity.id, azureAiUserRole.id)
-  properties: {
-    roleDefinitionId: azureAiUserRole.id
-    principalType: 'ServicePrincipal'
-    principalId: appServiceManagedIdentity.properties.principalId
-  }
-}
-
-/*@description('Grant the App Service managed identity Azure AI manager role permission so it create the Foundry-hosted agent. Only needed if your code creates agents directly.')
-resource azureAiManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: foundry
-  name: guid(foundry.id, appServiceManagedIdentity.id, azureAiProjectManagerRole.id)
-  properties: {
-    roleDefinitionId: azureAiProjectManagerRole.id
-    principalType: 'ServicePrincipal'
-    principalId: appServiceManagedIdentity.properties.principalId
-  }
-}*/
 
 @description('Linux, PremiumV3 App Service Plan to host the chat web application.')
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
@@ -219,8 +168,8 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
-      AIProjectEndpoint:  foundry::project.properties.endpoints['AI Foundry API']
-      AIAgentId: 'Not yet set' // Will be set once the agent is created
+      AgentBaseUrl: 'Not yet set' // Will be set via CLI after agent is published as an application
+      AgentModelDeploymentName: 'agent-model'
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }

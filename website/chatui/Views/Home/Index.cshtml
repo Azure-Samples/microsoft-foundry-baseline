@@ -180,8 +180,7 @@
         const chatContainer = document.querySelector(".msger-chat");
         const messageInput = chatForm?.elements?.message;
 
-        const { id } = await createThread();
-        const threadId = id;
+        const messages = [];
 
         addChatMessage(BOT_NAME, "left", "How can I help you today?");
 
@@ -193,41 +192,30 @@
 
             messageInput.value = "";
 
+            messages.push({ role: "user", content: prompt });
             addChatMessage(PERSON_NAME, "right", prompt);
 
             try {
-                const { data } = await sendPrompt(prompt);
+                const { data } = await sendMessages(messages);
+                messages.push({ role: "assistant", content: data });
                 addChatMessage(BOT_NAME, "left", data);
             } catch (error) {
+                messages.pop();
                 addChatMessage(BOT_NAME, "left", `Sorry, something went wrong.`);
                 console.error(error);
             }
         });
 
-        async function sendPrompt(prompt) {
-            const response = await fetch(`/chat/completions/${threadId}`, {
+        async function sendMessages(messages) {
+            const response = await fetch("/chat/responses", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(prompt)
+                body: JSON.stringify({ messages })
             });
 
             if (!response.ok) {
                 const errorMessage = await response.text().catch(() => response.statusText);
-                throw new Error(`Error sending prompt: ${errorMessage}`);
-            }
-
-            return response.json();
-        }
-
-        async function createThread() {
-            const response = await fetch("/chat/conversations", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" }
-            });
-
-            if (!response.ok) {
-                const errorMessage = await response.text().catch(() => response.statusText);
-                throw new Error(`Error creating session: ${errorMessage}`);
+                throw new Error(`Error sending messages: ${errorMessage}`);
             }
 
             return response.json();
