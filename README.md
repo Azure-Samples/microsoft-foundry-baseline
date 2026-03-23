@@ -274,6 +274,17 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | As a result, the agent becomes a nested Azure resource visible in the Azure control plane. Publishing the chat agent automatically created a dedicated agent identity blueprint and agent identity. Both are bound to the Azure Foundry application resource. This distinct identity represents the chat agent's system authority for accessing its own resources. Reassigning RBAC permissions was required so the new agent identity get permissions to access the conversation, vector store and storage resources. At this deployment time, it was a great moment to reassess only the permissions the agent needs for its tool actions. |
    | :-------: | :------------------------- |
 
+   **Understanding RBAC for published agent invocation**
+
+   Invoking a published agent through the Responses API requires the calling identity to hold the **Azure AI User** role at two scopes: the **Foundry project** and the **agent application** resource. The project-scope assignment grants the `Microsoft.MachineLearningServices/workspaces/agents/action` permission, which authorizes the caller to interact with the agent runtime. The application-scope assignment restricts which specific published agent the caller can reach.
+
+   This two-level model gives you fine-grained control over agent access:
+
+   - **Onboarding access to a single agent.** Assign Azure AI User at the project level *and* at that agent's application resource. The project-level assignment is a one-time prerequisite; the application-level assignment is what gates access to the specific agent.
+   - **Onboarding access to a second agent.** The project-level assignment is already in place. You only need to add an application-level assignment on the new agent's application resource.
+   - **Removing access to a single agent.** Remove the application-level assignment for that agent. The caller retains access to any other agents where it still has an application-level assignment.
+   - **Removing access to all agents.** Remove the project-level assignment. Without it, no application-level assignment is sufficient to invoke any agent in the project.
+
 1. Verify the agent deployment is running
 
    *This step verify the Foundry AI Agent Service deployment is runnning by invoking the agent application's responses endpoint.*
@@ -346,10 +357,11 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AgentBaseUrl="${AGENT_BASE_URL}"
    ```
 
-1. Restart the web app to load the site code and its updated configuation.
+1. Stop and start the web app to load the site code, its updated configuration, and acquire a fresh authentication token.
 
    ```powershell
-   az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   az webapp stop --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   az webapp start --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
    ```
 
 ### 5. Try it out! Test the deployed application that calls into the Foundry Agent Service
