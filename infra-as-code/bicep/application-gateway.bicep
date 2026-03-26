@@ -141,6 +141,38 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
           ruleGroupOverrides: []
         }
       ]
+      // AI chat conversations naturally contain markdown, code snippets, and special characters
+      // in assistant responses that trigger false positives across multiple OWASP rule categories
+      // (SQLi, protocol attack, XSS, etc.). The anomaly score accumulates across multi-turn
+      // conversations until WAF blocks the request (HTTP 403). This exclusion bypasses content-
+      // inspection rules for the "content" JSON field in the request body. When Azure WAF
+      // releases an AI/chat-aware rule set, revisit this exclusion.
+      exclusions: [
+        {
+          matchVariable: 'RequestArgValues'
+          selectorMatchOperator: 'Contains'
+          selector: 'content'
+          exclusionManagedRuleSets: [
+            {
+              ruleSetType: 'Microsoft_DefaultRuleSet'
+              ruleSetVersion: '2.1'
+              ruleGroups: [
+                { ruleGroupName: 'SQLI' }
+                { ruleGroupName: 'MS-ThreatIntel-SQLI' }
+                { ruleGroupName: 'PROTOCOL-ATTACK' }
+                { ruleGroupName: 'XSS' }
+                { ruleGroupName: 'RCE' }
+                { ruleGroupName: 'LFI' }
+                { ruleGroupName: 'RFI' }
+                { ruleGroupName: 'PHP' }
+                { ruleGroupName: 'MS-ThreatIntel-AppSec' }
+                { ruleGroupName: 'MS-ThreatIntel-WebShells' }
+                { ruleGroupName: 'MS-ThreatIntel-CVEs' }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
