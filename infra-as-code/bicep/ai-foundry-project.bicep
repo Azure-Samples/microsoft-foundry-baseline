@@ -298,7 +298,7 @@ module projectContainersWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment
     scopeUserContainerId: scopeAllContainers
   }
   dependsOn: [
-    foundry::project::aiAgentService // Wait for capability host — ensures the project identity is replicated in AAD
+    foundry::project::aiAgentService // Wait for capability host — ensures the project identity is replicated in Entra ID
   ]
 }
   
