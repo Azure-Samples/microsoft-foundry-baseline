@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Agents.AI;
-using chatui.Configuration;
-using AIChatMessage = Microsoft.Extensions.AI.ChatMessage;
-using AIChatRole = Microsoft.Extensions.AI.ChatRole;
 
 namespace chatui.Controllers;
 
@@ -11,33 +9,39 @@ namespace chatui.Controllers;
 
 public class ChatController(
     AIAgent agent,
+    ConcurrentDictionary<string, AgentSession> sessions,
     ILogger<ChatController> logger) : ControllerBase
 {
     private readonly AIAgent _agent = agent;
+    private readonly ConcurrentDictionary<string, AgentSession> _sessions = sessions;
     private readonly ILogger<ChatController> _logger = logger;
 
     [HttpPost]
     public async Task<IActionResult> Responses([FromBody] ResponsesRequest request)
     {
-        if (request.Messages is not { Length: > 0 })
-            throw new ArgumentException("At least one message is required.");
-        _logger.LogDebug("Prompt received {Prompt}", request.Messages[^1].Content);
+        if (string.IsNullOrWhiteSpace(request.Message))
+            throw new ArgumentException("A message is required.");
 
-        // Build ChatMessage[] directly — the ResponseItem overload's AsChatMessages()
-        // merges items with null MessageId into one message, breaking multi-turn.
-        var chatMessages = request.Messages.Select<ChatMessage, AIChatMessage>(m => m.Role switch
-        {
-            "user" => new(AIChatRole.User, m.Content),
-            "assistant" => new(AIChatRole.Assistant, m.Content),
-            _ => throw new ArgumentException($"Unsupported message role: {m.Role}")
-        }).ToList();
+        if (!_sessions.TryGetValue(request.SessionId, out var session))
+            return BadRequest(new { error = "Invalid session. Create one via POST /chat/sessions." });
 
-        var response = await _agent.RunAsync(chatMessages);
-        var fullText = response.AsOpenAIResponse().GetOutputText();
+        _logger.LogDebug("Prompt received {Prompt}", request.Message);
 
-        return Ok(new { data = fullText });
+        var result = await _agent.RunAsync(request.Message, session);
+
+        return Ok(new { data = result.ToString() });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Sessions()
+    {
+        var sessionId = Guid.NewGuid().ToString();
+        var session = await _agent.CreateSessionAsync();
+        _sessions[sessionId] = session;
+        _logger.LogDebug("Session created {SessionId}", sessionId);
+
+        return Ok(new { sessionId });
     }
 }
 
-public record ChatMessage(string Role, string Content);
-public record ResponsesRequest(ChatMessage[] Messages);
+public record ResponsesRequest(string Message, string SessionId);

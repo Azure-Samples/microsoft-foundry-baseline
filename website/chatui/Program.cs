@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using Azure.Identity;
 using OpenAI;
@@ -6,6 +7,7 @@ using System.ClientModel.Primitives;
 using Microsoft.Agents.AI;
 using OpenAI.Responses;
 using chatui.Configuration;
+using Microsoft.Extensions.AI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,13 +31,28 @@ builder.Services.AddSingleton<AIAgent>(provider =>
 
     var agentName = new Uri(config.AgentBaseUrl).Segments[^1].TrimEnd('/');
 
+    // The published endpoint is stateless — no server-side response storage.
+    // StoredOutputEnabled = false tells MEAI to null out ConversationId in the
+    // response, preventing MAF from setting PreviousResponseId on the next turn.
     #pragma warning disable OPENAI001, MAAI001
     return new OpenAIClient(new ApiKeyCredential(token.Token), options)
         .GetResponsesClient(config.AgentModelDeploymentName)
         .AsAIAgent(
-            name: agentName,
+            new ChatClientAgentOptions
+            {
+                Name = agentName,
+                ChatOptions = new ChatOptions
+                {
+                    RawRepresentationFactory = _ => new CreateResponseOptions
+                    {
+                        StoredOutputEnabled = false
+                    }
+                }
+            },
             clientFactory: inner => new InputTextAssistantChatClient(inner));
 });
+
+builder.Services.AddSingleton<ConcurrentDictionary<string, AgentSession>>();
 
 builder.Services.AddControllersWithViews();
 
