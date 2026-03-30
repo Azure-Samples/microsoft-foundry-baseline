@@ -10,6 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.17.1" />
-    <PackageReference Include="OpenAI" Version="2.9.1" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-*" />
   </ItemGroup>
 </Project>

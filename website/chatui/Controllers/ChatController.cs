@@ -1,22 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using OpenAI.Responses;
+using Microsoft.Agents.AI;
 using chatui.Configuration;
+using AIChatMessage = Microsoft.Extensions.AI.ChatMessage;
+using AIChatRole = Microsoft.Extensions.AI.ChatRole;
 
 namespace chatui.Controllers;
-
-#pragma warning disable OPENAI001 // Responses API is in preview
 
 [ApiController]
 [Route("[controller]/[action]")]
 
 public class ChatController(
-    ResponsesClient responsesClient,
-    IOptionsMonitor<ChatApiOptions> options,
+    AIAgent agent,
     ILogger<ChatController> logger) : ControllerBase
 {
-    private readonly ResponsesClient _responsesClient = responsesClient;
-    private readonly IOptionsMonitor<ChatApiOptions> _options = options;
+    private readonly AIAgent _agent = agent;
     private readonly ILogger<ChatController> _logger = logger;
 
     [HttpPost]
@@ -26,15 +23,17 @@ public class ChatController(
             throw new ArgumentException("At least one message is required.");
         _logger.LogDebug("Prompt received {Prompt}", request.Messages[^1].Content);
 
-        var items = request.Messages.Select(m => m.Role switch
+        // Build ChatMessage[] directly — the ResponseItem overload's AsChatMessages()
+        // merges items with null MessageId into one message, breaking multi-turn.
+        var chatMessages = request.Messages.Select<ChatMessage, AIChatMessage>(m => m.Role switch
         {
-            "user" => ResponseItem.CreateUserMessageItem(m.Content),
-            "assistant" => ResponseItem.CreateAssistantMessageItem(m.Content),
+            "user" => new(AIChatRole.User, m.Content),
+            "assistant" => new(AIChatRole.Assistant, m.Content),
             _ => throw new ArgumentException($"Unsupported message role: {m.Role}")
         }).ToList();
 
-        var response = await _responsesClient.CreateResponseAsync(model: _options.CurrentValue.AgentModelDeploymentName, items);
-        var fullText = response.Value.GetOutputText();
+        var response = await _agent.RunAsync(chatMessages);
+        var fullText = response.AsOpenAIResponse().GetOutputText();
 
         return Ok(new { data = fullText });
     }
