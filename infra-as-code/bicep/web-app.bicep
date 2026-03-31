@@ -143,7 +143,8 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
     endToEndEncryptionEnabled: true
     vnetRouteAllEnabled: true
     hostNamesDisabled: false
-    clientAffinityEnabled: false
+    clientAffinityEnabled: true
+    clientAffinityProxyEnabled: true
     siteConfig: {
       ftpsState: 'Disabled'
       vnetRouteAllEnabled: true
