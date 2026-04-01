@@ -11,5 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.17.1" />
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-*" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.*" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" /> <!-- Required by Cosmos SDK v3 internals even though we use System.Text.Json for document serialization -->
   </ItemGroup>
 </Project>

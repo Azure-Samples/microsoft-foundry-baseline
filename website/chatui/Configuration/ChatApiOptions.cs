@@ -10,4 +10,11 @@ public class ChatApiOptions
     public string AgentApiVersion { get; init; } = "2025-11-15-preview";
 
     public string AgentModelDeploymentName { get; init; } = "agent-model";
+
+    [Url]
+    public string CosmosDbEndpoint { get; init; } = default!;
+
+    public string CosmosDbDatabaseName { get; init; } = "chatui";
+
+    public string CosmosDbContainerName { get; init; } = "sessions";
 }

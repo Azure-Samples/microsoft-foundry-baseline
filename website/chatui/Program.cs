@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using Azure.Identity;
 using OpenAI;
@@ -8,6 +7,8 @@ using Microsoft.Agents.AI;
 using OpenAI.Responses;
 using chatui.Configuration;
 using Microsoft.Extensions.AI;
+using Microsoft.Azure.Cosmos;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +17,33 @@ builder.Services.AddOptions<ChatApiOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+// Register the Cosmos DB client and session container for chat history persistence.
+// UseSystemTextJsonSerializerWithOptions enables native ChatMessage serialization via
+// MEAI's AIJsonUtilities, which knows how to round-trip ChatMessage and its subtypes.
+builder.Services.AddSingleton<CosmosClient>(provider =>
+{
+    var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
+    var cosmosOptions = new CosmosClientOptions
+    {
+        UseSystemTextJsonSerializerWithOptions = new JsonSerializerOptions(AIJsonUtilities.DefaultOptions)
+    };
+
+    return new CosmosClient(config.CosmosDbEndpoint, new DefaultAzureCredential(), cosmosOptions);
+});
+
+builder.Services.AddSingleton<CosmosChatHistoryProvider>(provider =>
+{
+    var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
+    var cosmosClient = provider.GetRequiredService<CosmosClient>();
+    var container = cosmosClient.GetContainer(config.CosmosDbDatabaseName, config.CosmosDbContainerName);
+
+    return new CosmosChatHistoryProvider(container);
+});
+
 builder.Services.AddSingleton<AIAgent>(provider =>
 {
     var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
+    var chatHistoryProvider = provider.GetRequiredService<CosmosChatHistoryProvider>();
     var baseUrl = new Uri($"{config.AgentBaseUrl.TrimEnd('/')}/protocols/openai");
 
     // TODO: Token is fetched once at startup and will expire. Replace with a
@@ -36,11 +61,12 @@ builder.Services.AddSingleton<AIAgent>(provider =>
     // response, preventing MAF from setting PreviousResponseId on the next turn.
     #pragma warning disable OPENAI001, MAAI001
     return new OpenAIClient(new ApiKeyCredential(token.Token), options)
-        .GetResponsesClient(config.AgentModelDeploymentName)
+        .GetResponsesClient()
         .AsAIAgent(
             new ChatClientAgentOptions
             {
                 Name = agentName,
+                ChatHistoryProvider = chatHistoryProvider,
                 ChatOptions = new ChatOptions
                 {
                     RawRepresentationFactory = _ => new CreateResponseOptions
@@ -51,8 +77,6 @@ builder.Services.AddSingleton<AIAgent>(provider =>
             },
             clientFactory: inner => new InputTextAssistantChatClient(inner));
 });
-
-builder.Services.AddSingleton<ConcurrentDictionary<string, AgentSession>>();
 
 builder.Services.AddControllersWithViews();
 

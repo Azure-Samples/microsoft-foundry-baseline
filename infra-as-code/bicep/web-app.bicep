@@ -41,7 +41,6 @@ param existingWebAppDeploymentStorageAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-
 // variables
 var appName = 'app-${baseName}'
 
@@ -101,6 +100,19 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
+@description('Deploy a dedicated Cosmos DB account for the web app\'s persistent session store. The MI is created first so the session store module can assign data plane RBAC internally.')
+module deployWebAppSessionStore 'webapp-session-cosmosdb.bicep' = {
+  name: 'webAppSessionStoreDeploy'
+  scope: resourceGroup()
+  params: {
+    location: location
+    baseName: baseName
+    logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
+    privateEndpointSubnetResourceId: virtualNetwork::privateEndpointsSubnet.id
+    webAppManagedIdentityPrincipalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+
 @description('Linux, PremiumV3 App Service Plan to host the chat web application.')
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'asp-${appName}${uniqueString(subscription().subscriptionId)}'
@@ -143,8 +155,9 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
     endToEndEncryptionEnabled: true
     vnetRouteAllEnabled: true
     hostNamesDisabled: false
-    clientAffinityEnabled: true
-    clientAffinityProxyEnabled: true
+    clientAffinityEnabled: false // External session state (Cosmos DB) makes affinity unnecessary — any
+                                // instance can serve any request. Disabling improves load balancing.
+    clientAffinityProxyEnabled: false
     siteConfig: {
       ftpsState: 'Disabled'
       vnetRouteAllEnabled: true
@@ -171,6 +184,9 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
       AgentBaseUrl: 'Not yet set' // Will be set via CLI after agent is published as an application
       AgentModelDeploymentName: 'agent-model'
+      CosmosDbEndpoint: deployWebAppSessionStore.outputs.cosmosDbEndpoint
+      CosmosDbDatabaseName: 'chatui'
+      CosmosDbContainerName: 'sessions'
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }

@@ -1,6 +1,6 @@
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Agents.AI;
+using chatui.Configuration;
 
 namespace chatui.Controllers;
 
@@ -9,11 +9,11 @@ namespace chatui.Controllers;
 
 public class ChatController(
     AIAgent agent,
-    ConcurrentDictionary<string, AgentSession> sessions,
+    CosmosChatHistoryProvider sessionProvider,
     ILogger<ChatController> logger) : ControllerBase
 {
     private readonly AIAgent _agent = agent;
-    private readonly ConcurrentDictionary<string, AgentSession> _sessions = sessions;
+    private readonly CosmosChatHistoryProvider _sessionProvider = sessionProvider;
     private readonly ILogger<ChatController> _logger = logger;
 
     [HttpPost]
@@ -22,8 +22,11 @@ public class ChatController(
         if (string.IsNullOrWhiteSpace(request.Message))
             throw new ArgumentException("A message is required.");
 
-        if (!_sessions.TryGetValue(request.SessionId, out var session))
-            return BadRequest(new { error = "Invalid session. Create one via POST /chat/sessions." });
+        // Fresh AgentSession per request — conversation state lives in Cosmos.
+        // LoadOrCreateSessionAsync populates the StateBag from Cosmos (existing session)
+        // or initializes it empty (new session, document created on first upsert).
+        var session = await _agent.CreateSessionAsync();
+        await _sessionProvider.LoadSessionAsync(session, request.SessionId);
 
         _logger.LogDebug("Prompt received {Prompt}", request.Message);
 
@@ -33,11 +36,9 @@ public class ChatController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Sessions()
+    public IActionResult Sessions()
     {
         var sessionId = Guid.NewGuid().ToString();
-        var session = await _agent.CreateSessionAsync();
-        _sessions[sessionId] = session;
         _logger.LogDebug("Session created {SessionId}", sessionId);
 
         return Ok(new { sessionId });
