@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Azure.AI.Projects;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Foundry;
 using chatui.Configuration;
@@ -10,8 +8,7 @@ namespace chatui.Controllers;
 [ApiController]
 [Route("[controller]/[action]")]
 public class ChatController(
-    AIProjectClient projectClient,
-    IOptionsMonitor<ChatApiOptions> options,
+    FoundryAgentResolver agentResolver,
     ILogger<ChatController> logger) : ControllerBase
 {
     // TODO: [security] Do not trust client to provide conversationId. Instead map current user to their active conversationId in your application's own state store.
@@ -23,7 +20,8 @@ public class ChatController(
             throw new ArgumentException("Message cannot be null, empty, or whitespace.", nameof(message));
         logger.LogDebug("Prompt received {Prompt}", message);
 
-        FoundryAgent agent = await ResolveAgentAsync();
+        #pragma warning disable OPENAI001 // FoundryAgent is experimental
+        FoundryAgent agent = await agentResolver.GetAgentAsync();
 
         var innerAgent = agent.GetService<ChatClientAgent>()!;
         var session = await innerAgent.CreateSessionAsync(conversationId);
@@ -36,17 +34,11 @@ public class ChatController(
     public async Task<IActionResult> Conversations()
     {
         // TODO [performance efficiency] Delay creating a conversation until the first user message arrives.
-        FoundryAgent agent = await ResolveAgentAsync();
+        #pragma warning disable OPENAI001 // FoundryAgent is experimental
+        FoundryAgent agent = await agentResolver.GetAgentAsync();
 
         var session = await agent.CreateConversationSessionAsync();
 
         return Ok(new { id = session.ConversationId });
-    }
-
-    private async Task<FoundryAgent> ResolveAgentAsync()
-    {
-        var config = options.CurrentValue;
-        var agentRecord = await projectClient.AgentAdministrationClient.GetAgentAsync(config.AIAgentId);
-        return projectClient.AsAIAgent(agentRecord);
     }
 }

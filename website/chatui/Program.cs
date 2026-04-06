@@ -18,6 +18,8 @@ builder.Services.AddSingleton((provider) =>
     return projectClient;
 });
 
+builder.Services.AddSingleton<FoundryAgentResolver>();
+
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddCors(options =>
