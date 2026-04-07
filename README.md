@@ -1,6 +1,6 @@
 # Microsoft Foundry Agent Service chat baseline reference implementation
 
-This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Microsoft Foundry Agent Service as the orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
+This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Microsoft Foundry Agent Service as the agent orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
 
 Follow this implementation to deploy an agent in [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
@@ -309,7 +309,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
 
-Here you'll test your orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
+Here you'll test your Foundry orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
 
 *This testing step is completely optional.*
 
@@ -333,7 +333,7 @@ Here you'll test your orchestration agent by invoking it directly from the Found
 
 ### 4. Deploy the single-agent chat web app using `run-from-package`
 
-Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your Foundry agent orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
 In a production environment, you use a CI/CD pipeline to:
 
