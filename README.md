@@ -260,9 +260,9 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
    | :-------: | :------------------------- |
 
-1. Publish the the Agent
+1. Publish the agent. *Optional.*
 
-   *This step publishes the agent by creating a new application within the Foundry project and a corresponding deployment that references a specific agent version.*
+   *The chat web app uses the project-scoped Foundry endpoint, which provides stateful multi-turn conversations. Publishing creates a separate application endpoint that exposes a stateless Responses API. This step is included to validate the publish workflow, but the published endpoint is not consumed by the web app.*
 
    ```bash
    az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
@@ -274,9 +274,9 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | As a result, the agent becomes a nested Azure resource visible in the Azure control plane. Publishing the chat agent automatically created a dedicated agent identity blueprint and agent identity. Both are bound to the Azure Foundry application resource. This distinct identity represents the chat agent's system authority for accessing its own resources. Reassigning RBAC permissions was required so the new agent identity get permissions to access the conversation, vector store and storage resources. At this deployment time, it was a great moment to reassess only the permissions the agent needs for its tool actions. |
    | :-------: | :------------------------- |
 
-1. Verify the agent deployment is running
+1. Verify the agent deployment is running. *Optional — requires the previous step.*
 
-   *This step verify the Foundry AI Agent Service deployment is runnning by invoking the agent application's responses endpoint.*
+   *This step verifies the published agent application is running by invoking its responses endpoint.*
 
    ```powershell
    $AGENT_BASE_URL="$(az deployment group show -g $RESOURCE_GROUP -n 'foundryAppDeploy' --query "properties.outputs.agentApplicationBaseUrl.value" -o tsv)"
