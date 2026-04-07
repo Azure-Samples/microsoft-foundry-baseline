@@ -45,7 +45,7 @@ Microsoft Foundry hosts Foundry Agent Service as a capability. Foundry Agent ser
 
 ### Deploying an agent into Microsoft Foundry Agent service
 
-Project-scoped agents are created and managed through the Foundry [Agents REST API](https://learn.microsoft.com/rest/api/aifoundry/aiproject#agents), which is the underlying primitive for agent lifecycle operations. The Microsoft Foundry portal and the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects) consume this API. Agent invocation at runtime uses a different API surface, the [OpenAI Conversations](https://learn.microsoft.com/rest/api/aifoundry/aiproject#conversations) and [Responses](https://learn.microsoft.com/rest/api/aifoundry/aiproject#responses-94) APIs, as described in the [invocation section below](#invoking-the-agent-from-net-code-hosted-in-an-azure-web-app). [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) uses exclusively these OpenAI APIs, identifying the agent by name and version directly in the request body. Since the data plane to Foundry is private, all of these operations are restricted to being executed from within a private network connected to the private endpoint of Foundry.
+Project-scoped agents are created and managed through the Foundry [Agents REST API](https://learn.microsoft.com/rest/api/aifoundry/aiproject#agents), which is the underlying primitive for agent lifecycle operations. The Microsoft Foundry portal and the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects) consume this API. Since the data plane to Foundry is private, all of these operations are restricted to being executed from within a private network connected to the private endpoint of Foundry.
 
 Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to simulate a deployment pipeline which could have created the agent.
 
@@ -54,6 +54,8 @@ If using the Foundry portal is desired, then the web browser experience must be 
 ### Invoking the agent from .NET code hosted in an Azure Web App
 
 A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) with the Foundry provider to connect to the workload's agent through the project-scoped endpoint. At this scope, applications can choose between Microsoft Agent Framework or the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects). When invoking published agent endpoints, applications should opt for Microsoft Agent Framework. The project-scoped endpoint is accessed through the Foundry private endpoint within the virtual network. Published agent endpoints share the same Foundry account FQDN and are also reachable through the same private endpoint.
+
+Agent invocation at runtime uses a different API surface than agent lifecycle management. [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) uses exclusively the [OpenAI Conversations](https://learn.microsoft.com/rest/api/aifoundry/aiproject#conversations) and [Responses](https://learn.microsoft.com/rest/api/aifoundry/aiproject#responses-94) APIs, identifying the agent by name and version directly in the request body.
 
 ## Deployment guide
 
