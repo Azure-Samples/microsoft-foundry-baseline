@@ -9,4 +9,7 @@ public class ChatApiOptions
 
     [Required]
     public string AIAgentId { get; init; } = default!;
+
+    [Required]
+    public string AIAgentVersion { get; init; } = default!;
 }

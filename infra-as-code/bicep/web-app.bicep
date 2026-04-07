@@ -221,6 +221,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
       AIProjectEndpoint:  foundry::project.properties.endpoints['AI Foundry API']
       AIAgentId: 'Not yet set' // Will be set once the agent is created
+      AIAgentVersion: 'Not yet set' // Will be set once the agent is created
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }

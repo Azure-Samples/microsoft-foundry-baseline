@@ -1,4 +1,5 @@
 using Azure.AI.Projects;
+using Azure.AI.Extensions.OpenAI;
 using Microsoft.Agents.AI.Foundry;
 using Microsoft.Extensions.Options;
 
@@ -12,7 +13,6 @@ public class FoundryAgentResolver : IDisposable
     private readonly IOptionsMonitor<ChatApiOptions> _options;
     private readonly IDisposable? _changeToken;
     private volatile FoundryAgent? _agent;
-    private string? _agentId;
 
     public FoundryAgentResolver(AIProjectClient projectClient, IOptionsMonitor<ChatApiOptions> options)
     {
@@ -21,18 +21,17 @@ public class FoundryAgentResolver : IDisposable
         _changeToken = options.OnChange(_ => Interlocked.Exchange(ref _agent, null));
     }
 
-    public async Task<FoundryAgent> GetAgentAsync()
+    public FoundryAgent GetAgent()
     {
         var current = _agent;
         if (current is not null)
             return current;
 
-        var id = _options.CurrentValue.AIAgentId;
-        var record = await _projectClient.AgentAdministrationClient.GetAgentAsync(id);
-        var agent = _projectClient.AsAIAgent(record);
+        var name = _options.CurrentValue.AIAgentId;
+        var version = _options.CurrentValue.AIAgentVersion;
+        var agent = _projectClient.AsAIAgent(new AgentReference(name, version));
 
         _agent = agent;
-        _agentId = id;
         return agent;
     }
 

@@ -5,6 +5,8 @@ using chatui.Configuration;
 
 namespace chatui.Controllers;
 
+#pragma warning disable OPENAI001 // FoundryAgent is experimental
+
 [ApiController]
 [Route("[controller]/[action]")]
 public class ChatController(
@@ -20,8 +22,7 @@ public class ChatController(
             throw new ArgumentException("Message cannot be null, empty, or whitespace.", nameof(message));
         logger.LogDebug("Prompt received {Prompt}", message);
 
-        #pragma warning disable OPENAI001 // FoundryAgent is experimental
-        FoundryAgent agent = await agentResolver.GetAgentAsync();
+        FoundryAgent agent = agentResolver.GetAgent();
 
         var innerAgent = agent.GetService<ChatClientAgent>()!;
         var session = await innerAgent.CreateSessionAsync(conversationId);
@@ -34,8 +35,7 @@ public class ChatController(
     public async Task<IActionResult> Conversations()
     {
         // TODO [performance efficiency] Delay creating a conversation until the first user message arrives.
-        #pragma warning disable OPENAI001 // FoundryAgent is experimental
-        FoundryAgent agent = await agentResolver.GetAgentAsync();
+        FoundryAgent agent = agentResolver.GetAgent();
 
         var session = await agent.CreateConversationSessionAsync();
 
