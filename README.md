@@ -45,7 +45,7 @@ Microsoft Foundry hosts Foundry Agent Service as a capability. Foundry Agent ser
 
 ### Deploying an agent into Microsoft Foundry Agent service
 
-Project-scoped agents are created and invoked through the Foundry [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/), which is the underlying primitive. The Microsoft Foundry portal, the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects), and the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (MAF) all consume this API. Since the data plane to Foundry is private, all of these are restricted to being executed from within a private network connected to the private endpoint of Foundry.
+Project-scoped agents are created and invoked through the Foundry [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiproject#agents), which is the underlying primitive. The Microsoft Foundry portal, the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects), and the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (MAF) all consume this API. Since the data plane to Foundry is private, all of these are restricted to being executed from within a private network connected to the private endpoint of Foundry.
 
 Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to simulate a deployment pipeline which could have created the agent.
 
