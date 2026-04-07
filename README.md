@@ -262,7 +262,10 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 1. Publish the agent. *Optional.*
 
-   *The chat web app uses the project-scoped Foundry endpoint, which provides stateful multi-turn conversations. Publishing creates a separate application endpoint that exposes a stateless Responses API. This step is included to validate the publish workflow, but the published endpoint is not consumed by the web app.*
+   *The chat web app uses the project-scoped Foundry endpoint, which provides stateful multi-turn conversations. Publishing promotes a specific version of the project-scoped agent into a separate application endpoint. This step is included to validate the publish workflow, but the published endpoint is not consumed by the web app.*
+
+   | :computer: | This is a control plane operation and does not require private network access. You can run it from your local workstation where the Bicep files are already available. |
+   | :--------: | :------------------------- |
 
    ```bash
    az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
