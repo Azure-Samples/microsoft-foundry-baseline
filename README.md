@@ -311,7 +311,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 Here you'll test your orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
 
-*This step testing step is completely optional.*
+*This testing step is completely optional.*
 
 1. Open the Azure portal to your subscription.
 
