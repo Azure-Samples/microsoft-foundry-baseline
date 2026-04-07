@@ -251,10 +251,12 @@ The AI agent definition would likely be deployed from your application's pipelin
    # Persist the agent
    az rest -u $FOUNDRY_AGENT_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
 
-   # Capture the Agent's ID
-   $AGENT_ID="$(az rest -u $FOUNDRY_AGENT_URL -m 'get' --resource 'https://ai.azure.com' --query last_id -o tsv)"
+   # Capture the agent's name and latest version
+   $AGENT_RESPONSE=$(az rest -u $FOUNDRY_AGENT_URL -m 'get' --resource 'https://ai.azure.com' -o json)
+   $AGENT_ID=$($AGENT_RESPONSE | ConvertFrom-Json).last_id
+   $AGENT_VERSION=$($AGENT_RESPONSE | ConvertFrom-Json).data[-1].versions.latest.version
 
-   echo $AGENT_ID
+   echo "$AGENT_ID (version $AGENT_VERSION)"
    ```
 
    | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
@@ -374,7 +376,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Update the app configuration to use the agent you deployed.
 
    ```powershell
-   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
+   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}" AIAgentVersion="${AGENT_VERSION}"
    ```
 
 1. Restart the web app to load the site code and its updated configuration.
