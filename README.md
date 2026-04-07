@@ -1,6 +1,6 @@
 # Microsoft Foundry Agent Service chat baseline reference implementation
 
-This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Microsoft Foundry Agent Service as the orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
+This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Microsoft Foundry Agent Service as the agent orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
 
 Follow this implementation to deploy an agent in [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
@@ -36,7 +36,7 @@ Microsoft Foundry hosts Foundry Agent Service as a capability. Foundry Agent ser
 #### Workflow
 
 1. An application user interacts with a chat UI. The requests are routed through Azure Application Gateway. Azure Web Application Firewall inspects these requests before it forwards them to the back-end App Service.
-1. When the web application receives a user query or instruction, it invokes the purpose-built agent. The web application communicates with the agent via the Azure AI Agent SDK. The web application calls the agent over a private endpoint and authenticates to Foundry by using its managed identity.
+1. When the web application receives a message, it passes it along with the conversation ID to the Foundry prompt-based agent through the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework), which calls the [OpenAI Conversations](https://learn.microsoft.com/rest/api/aifoundry/aiproject#conversations) and [Responses](https://learn.microsoft.com/rest/api/aifoundry/aiproject#responses-94) APIs under the hood. The web application calls the agent over a private endpoint and authenticates to Foundry by using its managed identity.
 1. The agent processes the user's request based on the instructions in its system prompt. To fulfill the user's intent, the agent uses a configured language model and connected tools and knowledge stores.
 1. The agent connects to the knowledge store (Azure AI Search) in the private network via a private endpoint.
 1. Requests to most external knowledge stores or tools, such as Wikipedia, traverse Azure Firewall for inspection and egress policy enforcement. Some of Foundry's built-in connections might not support egressing through your subnet.
@@ -45,7 +45,7 @@ Microsoft Foundry hosts Foundry Agent Service as a capability. Foundry Agent ser
 
 ### Deploying an agent into Microsoft Foundry Agent service
 
-Agents can be created via the Microsoft Foundry portal, [Azure AI Persistent Agents client library](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent), or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). The creation and invocation of agents are a data plane operation. Since the data plane to Foundry is private, all three of those are restricted to being executed from within a private network connected to the private endpoint of Foundry.
+Project-scoped agents are created and managed through the Foundry [Agents REST API](https://learn.microsoft.com/rest/api/aifoundry/aiproject#agents), which is the underlying primitive for agent lifecycle operations. The Microsoft Foundry portal and the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects) consume this API. Agent invocation at runtime uses a different API surface, the [OpenAI Conversations](https://learn.microsoft.com/rest/api/aifoundry/aiproject#conversations) and [Responses](https://learn.microsoft.com/rest/api/aifoundry/aiproject#responses-94) APIs, as described in the [invocation section below](#invoking-the-agent-from-net-code-hosted-in-an-azure-web-app). [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) uses exclusively these OpenAI APIs, identifying the agent by name and version directly in the request body. Since the data plane to Foundry is private, all of these operations are restricted to being executed from within a private network connected to the private endpoint of Foundry.
 
 Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to simulate a deployment pipeline which could have created the agent.
 
@@ -53,7 +53,7 @@ If using the Foundry portal is desired, then the web browser experience must be 
 
 ### Invoking the agent from .NET code hosted in an Azure Web App
 
-A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Azure AI Persistent Agents client library](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent) to connect to the workload's agent. The endpoint for the agent is exposed exclusively through the Foundry private endpoint.
+A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) with the Foundry provider to connect to the workload's agent through the project-scoped endpoint. At this scope, applications can choose between Microsoft Agent Framework or the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects). When invoking published agent endpoints, applications should opt for Microsoft Agent Framework. The project-scoped endpoint is accessed through the Foundry private endpoint within the virtual network. Published agent endpoints share the same Foundry account FQDN and are also reachable through the same private endpoint.
 
 ## Deployment guide
 
@@ -155,7 +155,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   This deployment has been tested in the following locations: `eastus`, `eastus2`, `francecentral`, and `switzerlandnorth`. You might be successful in other locations as well.
+   This deployment has been tested in the following locations: `eastus`, `eastus2`, `francecentral`, `swedencentral`, and `switzerlandnorth`. You might be successful in other locations as well.
 
    ```bash
    LOCATION=eastus2
@@ -260,9 +260,12 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
    | :-------: | :------------------------- |
 
-1. Publish the the Agent
+1. Publish the agent. *Optional.*
 
-   *This step publishes the agent by creating a new application within the Foundry project and a corresponding deployment that references a specific agent version.*
+   *The chat web app uses the project-scoped Foundry endpoint, which provides stateful multi-turn conversations. Publishing promotes a specific version of the project-scoped agent into a separate application endpoint. This step is included to validate the publish workflow, but the published endpoint is not consumed by the web app.*
+
+   | :computer: | This is a control plane operation and does not require private network access. You can run it from your local workstation where the Bicep files are already available. |
+   | :--------: | :------------------------- |
 
    ```bash
    az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
@@ -274,9 +277,24 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | As a result, the agent becomes a nested Azure resource visible in the Azure control plane. Publishing the chat agent automatically created a dedicated agent identity blueprint and agent identity. Both are bound to the Azure Foundry application resource. This distinct identity represents the chat agent's system authority for accessing its own resources. Reassigning RBAC permissions was required so the new agent identity get permissions to access the conversation, vector store and storage resources. At this deployment time, it was a great moment to reassess only the permissions the agent needs for its tool actions. |
    | :-------: | :------------------------- |
 
-1. Verify the agent deployment is running
+   **Understanding RBAC for published agents**
 
-   *This step verify the Foundry AI Agent Service deployment is runnning by invoking the agent application's responses endpoint.*
+   Publishing an agent introduces two distinct RBAC dimensions:
+
+   **1. Agent identity's access to resources.** The published agent receives its own dedicated identity (agent identity blueprint) that is separate from the project's default agent identity. This identity needs RBAC assignments on the resources the agent accesses at runtime, such as Cosmos DB for conversation storage, AI Search for vector stores, and Storage for file containers.
+
+   **2. Client identity's access to published agent.** A client invoking the published agent's API must hold the **Azure AI User** role at two scopes: the **Foundry project** and the **agent application** resource. The project-scope assignment grants the `Microsoft.MachineLearningServices/workspaces/agents/action` permission, which authorizes the caller to interact with the agent runtime. The application-scope assignment restricts which specific published agent the caller can invoke.
+
+   This two-level scoping within the client dimension gives you fine-grained control over agent access:
+
+   - **Onboarding access to a single agent.** Assign Azure AI User at the project level *and* at that agent's application resource. The project-level assignment is a one-time prerequisite; the application-level assignment gates access to the specific agent.
+   - **Onboarding access to a second agent.** The project-level assignment is already in place. Only add an application-level assignment on the new agent's application resource.
+   - **Removing access to a single agent.** Remove the application-level assignment for that agent. The caller retains access to any other agents where it still has an application-level assignment.
+   - **Removing access to all agents.** Remove the project-level assignment. Without it, no application-level assignment is sufficient to invoke any agent in the project.
+
+1. Verify the agent deployment is running. *Optional — requires the previous step.*
+
+   *This step verifies the published agent application is running by invoking its responses endpoint.*
 
    ```powershell
    $AGENT_BASE_URL="$(az deployment group show -g $RESOURCE_GROUP -n 'foundryAppDeploy' --query "properties.outputs.agentApplicationBaseUrl.value" -o tsv)"
@@ -286,17 +304,14 @@ The AI agent definition would likely be deployed from your application's pipelin
    az rest -u $AGENT_RESPONSES_URL -m "post" --resource "https://ai.azure.com" -b '{\"input\": \"Say hello\"}' --query "{agent:agent.name, agent_version:agent.version,output:output[-1].content[0].text}"
    ```
 
-   | :information: | The terminal displays the agent application’s response, verifying that the specified agent version is running inside the deployment. |
+   | :information: | The terminal displays the agent application’s response, verifying that the specified agent version is running inside the deployment. This invocation succeeds because the deployment assigned your principal the Cognitive Services User role at the Foundry account scope, which includes a data plane wildcard that covers agent invocation. In production, prefer the two-level Azure AI User model described above for least-privilege access. |
    | :--------: | :------------------------- |
 
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
 
-| :warning: | The new Foundry portal experience does not currently support the end-to-end network isolation used in this architecture. Using this secured architecture, you will only be able to create and call your agents through the SDK or REST API; not interface with them in the Foundry portal. See, [How to use a virtual network with the Foundry Agent Service](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/virtual-networks?view=foundry&preserve-view=true). These intermediate testing instructions will be updated when this experience is supported. |
-| :-------: | :------------------------- |
+Here you'll test your Foundry orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
 
-Here you'll test your orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
-
-*This step testing step is completely optional.*
+*This testing step is completely optional.*
 
 1. Open the Azure portal to your subscription.
 
@@ -318,7 +333,7 @@ Here you'll test your orchestration agent by invoking it directly from the Found
 
 ### 4. Publish the chat front-end web app
 
-Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your Foundry agent orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
 In a production environment, you use a CI/CD pipeline to:
 
@@ -362,7 +377,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
    ```
 
-1. Restart the web app to load the site code and its updated configuation.
+1. Restart the web app to load the site code and its updated configuration.
 
    ```powershell
    az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
