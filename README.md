@@ -36,7 +36,7 @@ Microsoft Foundry hosts Foundry Agent Service as a capability. Foundry Agent ser
 #### Workflow
 
 1. An application user interacts with a chat UI. The requests are routed through Azure Application Gateway. Azure Web Application Firewall inspects these requests before it forwards them to the back-end App Service.
-1. When the web application receives a message, it passes it along with the conversation ID to the Foundry prompt-based agent through the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (MAF). The web application calls the agent over a private endpoint and authenticates to Foundry by using its managed identity.
+1. When the web application receives a message, it passes it along with the conversation ID to the Foundry prompt-based agent through the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework). The web application calls the agent over a private endpoint and authenticates to Foundry by using its managed identity.
 1. The agent processes the user's request based on the instructions in its system prompt. To fulfill the user's intent, the agent uses a configured language model and connected tools and knowledge stores.
 1. The agent connects to the knowledge store (Azure AI Search) in the private network via a private endpoint.
 1. Requests to most external knowledge stores or tools, such as Wikipedia, traverse Azure Firewall for inspection and egress policy enforcement. Some of Foundry's built-in connections might not support egressing through your subnet.
@@ -45,7 +45,7 @@ Microsoft Foundry hosts Foundry Agent Service as a capability. Foundry Agent ser
 
 ### Deploying an agent into Microsoft Foundry Agent service
 
-Project-scoped agents are created and invoked through the Foundry [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiproject#agents), which is the underlying primitive. The Microsoft Foundry portal, the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects), and the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (MAF) all consume this API. Since the data plane to Foundry is private, all of these are restricted to being executed from within a private network connected to the private endpoint of Foundry.
+Project-scoped agents are created and invoked through the Foundry [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiproject#agents), which is the underlying primitive. The Microsoft Foundry portal, the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects), and the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) all consume this API. Since the data plane to Foundry is private, all of these are restricted to being executed from within a private network connected to the private endpoint of Foundry.
 
 Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to simulate a deployment pipeline which could have created the agent.
 
@@ -53,7 +53,7 @@ If using the Foundry portal is desired, then the web browser experience must be 
 
 ### Invoking the agent from .NET code hosted in an Azure Web App
 
-A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) (MAF) with the Foundry provider to connect to the workload's agent through the project-scoped endpoint. At this scope, applications can choose between MAF or the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects) directly. When invoking published agent endpoints, applications should opt for MAF or the [OpenAI SDK](https://github.com/openai/openai-dotnet). The project-scoped endpoint is accessed through the Foundry private endpoint within the virtual network. Published agent endpoints share the same Foundry account FQDN and are also reachable through the same private endpoint.
+A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) with the Foundry provider to connect to the workload's agent through the project-scoped endpoint. At this scope, applications can choose between Microsoft Agent Framework or the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects). When invoking published agent endpoints, applications should opt for Microsoft Agent Framework. The project-scoped endpoint is accessed through the Foundry private endpoint within the virtual network. Published agent endpoints share the same Foundry account FQDN and are also reachable through the same private endpoint.
 
 ## Deployment guide
 
@@ -281,9 +281,9 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    Publishing an agent introduces two distinct RBAC dimensions:
 
-   **1. Agent identity → resources.** The published agent receives its own dedicated identity (agent identity blueprint) that is separate from the project's default agent identity. This identity needs RBAC assignments on the resources the agent accesses at runtime — Cosmos DB for conversation storage, AI Search for vector stores, and Storage for file containers. These assignments are scoped to individual resources, following least-privilege.
+   **1. Agent identity's access to resources.** The published agent receives its own dedicated identity (agent identity blueprint) that is separate from the project's default agent identity. This identity needs RBAC assignments on the resources the agent accesses at runtime, such as Cosmos DB for conversation storage, AI Search for vector stores, and Storage for file containers.
 
-   **2. Client identity → published agent.** A client invoking the published agent's Responses API must hold the **Azure AI User** role at two scopes: the **Foundry project** and the **agent application** resource. The project-scope assignment grants the `Microsoft.MachineLearningServices/workspaces/agents/action` permission, which authorizes the caller to interact with the agent runtime. The application-scope assignment restricts which specific published agent the caller can reach.
+   **2. Client identity's access to published agent.** A client invoking the published agent's API must hold the **Azure AI User** role at two scopes: the **Foundry project** and the **agent application** resource. The project-scope assignment grants the `Microsoft.MachineLearningServices/workspaces/agents/action` permission, which authorizes the caller to interact with the agent runtime. The application-scope assignment restricts which specific published agent the caller can invoke.
 
    This two-level scoping within the client dimension gives you fine-grained control over agent access:
 
@@ -331,7 +331,7 @@ Here you'll test your Foundry orchestration agent by invoking it directly from t
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Deploy the single-agent chat web app using `run-from-package`
+### 4. Publish the chat front-end web app
 
 Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your Foundry agent orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
