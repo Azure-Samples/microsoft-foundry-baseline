@@ -155,7 +155,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   This deployment has been tested in the following locations: `eastus`, `eastus2`, `francecentral`, and `switzerlandnorth`. You might be successful in other locations as well.
+   This deployment has been tested in the following locations: `eastus`, `eastus2`, `francecentral`, `swedencentral`, and `switzerlandnorth`. You might be successful in other locations as well.
 
    ```bash
    LOCATION=eastus2
