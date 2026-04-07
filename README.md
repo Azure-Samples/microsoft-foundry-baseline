@@ -374,7 +374,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
    ```
 
-1. Restart the web app to load the site code and its updated configuation.
+1. Restart the web app to load the site code and its updated configuration.
 
    ```powershell
    az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
