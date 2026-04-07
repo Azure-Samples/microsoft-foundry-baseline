@@ -328,7 +328,7 @@ Here you'll test your orchestration agent by invoking it directly from the Found
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Publish the chat front-end web app
+### 4. Deploy the single-agent chat web app using `run-from-package`
 
 Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
