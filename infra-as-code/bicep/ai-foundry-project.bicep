@@ -28,7 +28,16 @@ param existingBingAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
+@description('The existing User Managed Identity for the Foundry project.')
+@minLength(1)
+param existingAgentUserManagedIdentityName string
+
 // ---- Existing resources ----
+
+@description('Existing User Managed Identity for the Foundry project.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+  name: existingAgentUserManagedIdentityName
+}
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
 #disable-next-line BCP053
@@ -36,24 +45,6 @@ var workspaceId = foundry::project.properties.internalId
 var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId, 8, 4)}-${substring(workspaceId, 12, 4)}-${substring(workspaceId, 16, 4)}-${substring(workspaceId, 20, 12)}'
 
 var scopeAllContainers = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory'
-
-// Storage Blob Data Owner Role
-resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
-  scope: subscription()
-}
-
-// Storage Blob Data Contributor
-resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-  scope: subscription()
-}
-
-// Cosmos DB Account Operator Role
-resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '230815da-be43-4aae-9cb4-875f7bd000aa'
-  scope: subscription()
-}
 
 @description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Foundry project\'s identity.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
@@ -65,22 +56,18 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
   }
 }
 
-resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
-  scope: subscription()
-}
-
-resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
-  scope: subscription()
-}
-
 resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
   name: existingStorageAccountName
 }
 
 resource azureAISearchService 'Microsoft.Search/searchServices@2025-02-01-preview' existing = {
   name: existingAISearchAccountName
+}
+
+// Storage Blob Data Owner Role
+resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+  scope: subscription()
 }
 
 #disable-next-line BCP081
@@ -101,12 +88,11 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
   resource project 'projects' = {
     name: 'projchat'
     location: location
-    // This project uses a System Assigned Managed Identity instead of a User Assigned Managed Identity.
-    // At the time of this writing, the Foundry Agent Service does not support application creation when
-    // the project is configured with a User Assigned Managed Identity. When UMI support becomes available,
-    // consider reverting to UserAssigned to align with identity best practices for this architecture.
     identity: {
-      type: 'SystemAssigned'
+      type: 'UserAssigned'
+      userAssignedIdentities: {
+        '${agentUserManagedIdentity.id}': {}
+      }
     }
     properties: {
       description: 'Chat using internet data in your Foundry Agent.'
@@ -227,78 +213,35 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
   }
 }
 
-// Role assignments for the Foundry project's System Assigned Managed Identity.
-// These grants are required because the project uses SystemAssigned identity (see identity note above).
-// When reverting to UserAssigned, replace 'foundry::project.identity.principalId' with the UMI principal
-// and restore the UMI role assignments that were removed from the dependency modules.
-
-@description('Grant the Foundry project managed identity Storage Account Blob Data Contributor user role permissions.')
-module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignment.bicep' = {
-  name: 'projectBlobDataContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: storageBlobDataContributorRole.id
-    principalId: foundry::project.identity.principalId
-    existingStorageAccountName: agentStorageAccount.name
-  }
-}
+// Role assignments
 
 @description('Grant the Foundry project managed identity the Storage Account Blob Data Owner user role permissions.')
 module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAssignment.bicep' = {
   name: 'projectBlobDataOwnerConditionalAssignmentDeploy'
   params: {
     roleDefinitionId: storageBlobDataOwnerRole.id
-    principalId: foundry::project.identity.principalId
+    principalId: agentUserManagedIdentity.properties.principalId
     existingStorageAccountName: agentStorageAccount.name
     conditionVersion: '2.0'
     condition: '((!(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/read\'})  AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/filter/action\'}) AND  !(ActionMatches{\'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/write\'}) ) OR (@Resource[Microsoft.Storage/storageAccounts/blobServices/containers:name] StringStartsWithIgnoreCase \'${workspaceIdAsGuid}\'))'
   }
 }
 
-@description('Grant the Foundry project managed identity AI Search Contributor user role permissions.')
-module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
-  name: 'projectAISearchContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: azureAISearchServiceContributorRole.id
-    principalId: foundry::project.identity.principalId
-    existingAISearchAccountName: existingAISearchAccountName
-  }
-}
-
-@description('Grant the Foundry project managed identity AI Search Data Contributor user role permissions.')
-module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
-  name: 'projectAISearchIndexDataContributorAssignmentDeploy'
-  params: {
-    roleDefinitionId: azureAISearchIndexDataContributorRole.id
-    principalId: foundry::project.identity.principalId
-    existingAISearchAccountName: existingAISearchAccountName
-  }
-}
-
-@description('Grant the Foundry project managed identity Cosmos DB Db Operator user role permissions.')
-module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bicep' = {
-  name: 'projectDbCosmosDbOperatorAssignmentDeploy'
-  params: {
-    roleDefinitionId: cosmosDbOperatorRole.id
-    principalId: foundry::project.identity.principalId
-    existingCosmosDbAccountName: cosmosDbAccount.name
-  }
-}
-
 // Sql Role Assignments
 
 @description('Assign the Foundry project managed identity the ability to read and write data in all collections within enterprise_memory database.')
-module projectContainersWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
-  name: 'projectContainersWriterSqlAssignmentDeploy'
+module containersWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
+  name: 'containersWriterSqlAssignmentDeploy'
   params: {
     roleDefinitionId: cosmosDbAccount::dataContributorRole.id
-    principalId: foundry::project.identity.principalId
+    principalId: agentUserManagedIdentity.properties.principalId
     existingCosmosDbAccountName: cosmosDbAccount.name
     existingCosmosDbName: 'enterprise_memory'
     existingCosmosCollectionTypeName: 'containers'
     scopeUserContainerId: scopeAllContainers
   }
   dependsOn: [
-    foundry::project::aiAgentService // Wait for capability host — ensures the project identity is replicated in Entra ID
+    foundry::project::aiAgentService
   ]
 }
   
