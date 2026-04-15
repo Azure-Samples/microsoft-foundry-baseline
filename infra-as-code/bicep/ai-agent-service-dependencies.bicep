@@ -24,6 +24,12 @@ param privateEndpointSubnetResourceId string
 
 // ---- New resources ----
 
+@description('The User Managed Identity for the Foundry project. Foundry will use this identity for all agent interactions with the connected dependencies.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' = {
+  name: 'mi-agent-${baseName}'
+  location: location
+}
+
 @description('Deploy Azure Storage account for the Foundry Agent Service (dependency). This is used for binaries uploaded within threads or as "knowledge" uploaded as part of an agent.')
 module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
   name: 'agentStorageAccountDeploy'
@@ -34,6 +40,7 @@ module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
     debugUserPrincipalId: debugUserPrincipalId
     privateEndpointSubnetResourceId: privateEndpointSubnetResourceId
+    existingAgentUserManagedIdentityName: agentUserManagedIdentity.name
   }
 }
 
@@ -47,6 +54,7 @@ module deployCosmosDbThreadStorageAccount 'cosmos-db.bicep' = {
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
     debugUserPrincipalId: debugUserPrincipalId
     privateEndpointSubnetResourceId: privateEndpointSubnetResourceId
+    existingAgentUserManagedIdentityName: agentUserManagedIdentity.name
   }
 }
 
@@ -60,6 +68,7 @@ module deployAzureAISearchService 'ai-search.bicep' = {
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
     debugUserPrincipalId: debugUserPrincipalId
     privateEndpointSubnetResourceId: privateEndpointSubnetResourceId
+    existingAgentUserManagedIdentityName: agentUserManagedIdentity.name
   }
 }
 
@@ -68,3 +77,4 @@ module deployAzureAISearchService 'ai-search.bicep' = {
 output cosmosDbAccountName string = deployCosmosDbThreadStorageAccount.outputs.cosmosDbAccountName
 output storageAccountName string = deployAgentStorageAccount.outputs.storageAccountName
 output aiSearchName string = deployAzureAISearchService.outputs.aiSearchName
+output agentUserManagedIdentityName string = agentUserManagedIdentity.name

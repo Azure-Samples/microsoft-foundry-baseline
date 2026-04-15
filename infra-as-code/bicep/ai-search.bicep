@@ -22,7 +22,16 @@ param privateEndpointSubnetResourceId string
 @minLength(36)
 param debugUserPrincipalId string
 
+@description('The existing User Managed Identity for the Foundry project.')
+@minLength(1)
+param existingAgentUserManagedIdentityName string
+
 // ---- Existing resources ----
+
+@description('Existing User Managed Identity for the Foundry project.')
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+  name: existingAgentUserManagedIdentityName
+}
 
 resource aiSearchLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   name: 'privatelink.search.windows.net'
@@ -34,6 +43,11 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+  scope: subscription()
+}
+
+resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
   scope: subscription()
 }
 
@@ -73,6 +87,26 @@ resource debugUserAISearchIndexDataContributorAssignment 'Microsoft.Authorizatio
     roleDefinitionId: azureAISearchIndexDataContributorRole.id
     principalId: debugUserPrincipalId
     principalType: 'User'
+  }
+}
+
+@description('Grant the Foundry project managed identity AI Search Contributor user role permissions.')
+module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
+  name: 'projectAISearchContributorAssignmentDeploy'
+  params: {
+    roleDefinitionId: azureAISearchServiceContributorRole.id
+    principalId: agentUserManagedIdentity.properties.principalId
+    existingAISearchAccountName: azureAiSearchService.name
+  }
+}
+
+@description('Grant the Foundry project managed identity AI Search Data Contributor user role permissions.')
+module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
+  name: 'projectAISearchIndexDataContributorAssignmentDeploy'
+  params: {
+    roleDefinitionId: azureAISearchIndexDataContributorRole.id
+    principalId: agentUserManagedIdentity.properties.principalId
+    existingAISearchAccountName: azureAiSearchService.name
   }
 }
 
