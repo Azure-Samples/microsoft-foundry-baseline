@@ -264,53 +264,6 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
    | :-------: | :------------------------- |
 
-1. Publish the agent. *Optional.*
-
-   *The chat web app uses the project-scoped Foundry endpoint, which provides stateful multi-turn conversations. Publishing promotes a specific version of the project-scoped agent into a separate application endpoint. This step is included to validate the publish workflow, but the published endpoint is not consumed by the web app.*
-
-   | :computer: | This is a control plane operation and does not require private network access. You can run it from your local workstation where the Bicep files are already available. |
-   | :--------: | :------------------------- |
-
-   ```bash
-   az deployment group create -f ./infra-as-code/bicep/ai-foundry-appdeploy.bicep \
-      -g $RESOURCE_GROUP \
-      -n 'foundryAppDeploy' \
-      -p baseName=${BASE_NAME}
-   ```
-
-   | :information: | As a result, the agent becomes a nested Azure resource visible in the Azure control plane. Publishing the chat agent automatically created a dedicated agent identity blueprint and agent identity. Both are bound to the Azure Foundry application resource. This distinct identity represents the chat agent's system authority for accessing its own resources. Reassigning RBAC permissions was required so the new agent identity get permissions to access the conversation, vector store and storage resources. At this deployment time, it was a great moment to reassess only the permissions the agent needs for its tool actions. |
-   | :-------: | :------------------------- |
-
-   **Understanding RBAC for published agents**
-
-   Publishing an agent introduces two distinct RBAC dimensions:
-
-   **1. Agent identity's access to resources.** The published agent receives its own dedicated identity (agent identity blueprint) that is separate from the project's default agent identity. This identity needs RBAC assignments on the resources the agent accesses at runtime, such as Cosmos DB for conversation storage, AI Search for vector stores, and Storage for file containers.
-
-   **2. Client identity's access to published agent.** A client invoking the published agent's API must hold the **Azure AI User** role at two scopes: the **Foundry project** and the **agent application** resource. The project-scope assignment grants the `Microsoft.MachineLearningServices/workspaces/agents/action` permission, which authorizes the caller to interact with the agent runtime. The application-scope assignment restricts which specific published agent the caller can invoke.
-
-   This two-level scoping within the client dimension gives you fine-grained control over agent access:
-
-   - **Onboarding access to a single agent.** Assign Azure AI User at the project level *and* at that agent's application resource. The project-level assignment is a one-time prerequisite; the application-level assignment gates access to the specific agent.
-   - **Onboarding access to a second agent.** The project-level assignment is already in place. Only add an application-level assignment on the new agent's application resource.
-   - **Removing access to a single agent.** Remove the application-level assignment for that agent. The caller retains access to any other agents where it still has an application-level assignment.
-   - **Removing access to all agents.** Remove the project-level assignment. Without it, no application-level assignment is sufficient to invoke any agent in the project.
-
-1. Verify the agent deployment is running. *Optional — requires the previous step.*
-
-   *This step verifies the published agent application is running by invoking its responses endpoint.*
-
-   ```powershell
-   $AGENT_BASE_URL="$(az deployment group show -g $RESOURCE_GROUP -n 'foundryAppDeploy' --query "properties.outputs.agentApplicationBaseUrl.value" -o tsv)"
-
-   $AGENT_RESPONSES_URL="${AGENT_BASE_URL}/protocols/openai/responses?api-version=2025-11-15-preview"
-
-   az rest -u $AGENT_RESPONSES_URL -m "post" --resource "https://ai.azure.com" -b '{\"input\": \"Say hello\"}' --query "{agent:agent.name, agent_version:agent.version,output:output[-1].content[0].text}"
-   ```
-
-   | :information: | The terminal displays the agent application’s response, verifying that the specified agent version is running inside the deployment. This invocation succeeds because the deployment assigned your principal the Cognitive Services User role at the Foundry account scope, which includes a data plane wildcard that covers agent invocation. In production, prefer the two-level Azure AI User model described above for least-privilege access. |
-   | :--------: | :------------------------- |
-
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
 
 Here you'll test your Foundry orchestration agent by invoking it directly from the Foundry portal's playground experience. The Foundry portal is only accessible from your private network, so you'll do this from your jump box.
