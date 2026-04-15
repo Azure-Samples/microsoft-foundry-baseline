@@ -242,7 +242,7 @@ module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignm
   }
 }
 
-@description('Grant the Foundry application agent identity the Storage Account Blob Data Owner user role permissions.')
+@description('Grant the Foundry project managed identity the Storage Account Blob Data Owner user role permissions.')
 module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAssignment.bicep' = {
   name: 'projectBlobDataOwnerConditionalAssignmentDeploy'
   params: {
@@ -254,7 +254,7 @@ module projectBlobDataOwnerConditionalAssignment './modules/storageAccountRoleAs
   }
 }
 
-@description('Grant the Foundry application agent identity AI Search Contributor user role permissions.')
+@description('Grant the Foundry project managed identity AI Search Contributor user role permissions.')
 module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
   name: 'projectAISearchContributorAssignmentDeploy'
   params: {
@@ -264,7 +264,7 @@ module projectAISearchContributorAssignment './modules/aiSearchRoleAssignment.bi
   }
 }
 
-@description('Grant the Foundry application agent identity AI Search Data Contributor user role permissions.')
+@description('Grant the Foundry project managed identity AI Search Data Contributor user role permissions.')
 module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssignment.bicep' = {
   name: 'projectAISearchIndexDataContributorAssignmentDeploy'
   params: {
@@ -274,7 +274,7 @@ module projectAISearchIndexDataContributorAssignment './modules/aiSearchRoleAssi
   }
 }
 
-@description('Grant the Foundry application agent identity Cosmos DB Db Operator user role permissions.')
+@description('Grant the Foundry project managed identity Cosmos DB Db Operator user role permissions.')
 module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bicep' = {
   name: 'projectDbCosmosDbOperatorAssignmentDeploy'
   params: {
@@ -286,7 +286,7 @@ module projectDbCosmosDbOperatorAssignment './modules/cosmosdbRoleAssignment.bic
 
 // Sql Role Assignments
 
-@description('Assign the Foundry application agent identity the ability to read and write data in all collections within enterprise_memory database.')
+@description('Assign the Foundry project managed identity the ability to read and write data in all collections within enterprise_memory database.')
 module projectContainersWriterSqlAssignment './modules/cosmosdbSqlRoleAssignment.bicep' = {
   name: 'projectContainersWriterSqlAssignmentDeploy'
   params: {
