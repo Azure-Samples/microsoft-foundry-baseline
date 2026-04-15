@@ -53,7 +53,7 @@ If using the Foundry portal is desired, then the web browser experience must be 
 
 ### Invoking the agent from .NET code hosted in an Azure Web App
 
-A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) with the Foundry provider to connect to the workload's agent through the project-scoped endpoint. At this scope, applications can choose between Microsoft Agent Framework or the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects). When invoking published agent endpoints, applications should opt for Microsoft Agent Framework. The project-scoped endpoint is accessed through the Foundry private endpoint within the virtual network. Published agent endpoints share the same Foundry account FQDN and are also reachable through the same private endpoint.
+A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) with the Foundry provider to connect to the workload's agent through the project-scoped endpoint. At this scope, applications can choose between Microsoft Agent Framework or the [Foundry SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Projects). The project-scoped endpoint is accessed through the Foundry private endpoint within the virtual network.
 
 Agent invocation at runtime uses a different API surface than agent lifecycle management. [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) uses exclusively the [OpenAI Conversations](https://learn.microsoft.com/rest/api/aifoundry/aiproject#conversations) and [Responses](https://learn.microsoft.com/rest/api/aifoundry/aiproject#responses-94) APIs, identifying the agent by name and version directly in the request body.
 
@@ -261,7 +261,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    echo "$AGENT_ID (version $AGENT_VERSION)"
    ```
 
-   | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation. At this stage, the agent is available for validation, and has the `unpublished` state. Because this is your first agent, this step is also when the Foundry project provisions a default agent identity blueprint and a default agent identity for your project in Microsoft Entra Agent ID. All `unpublished` agents within the same Foundry project share this default agent identity until they are `published`.|
+   | :information: | You’ve just persisted a new versioned agent in Foundry AI Agent Service, including its instructions, tools, and model. The platform has stored a canonical agent definition in the `enterprise_memory` database, making the agent addressable, executable and ready for evaluation.|
    | :-------: | :------------------------- |
 
 ### 3. Test the agent from the Foundry portal in the playground. *Optional.*
