@@ -85,14 +85,14 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
   scope: subscription()
 }
 
-@description('Built-in Role: [Foundry User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#foundry-user)')
+@description('Built-in Role: [Foundry User](https://learn.microsoft.com/azure/foundry/concepts/rbac-foundry#built-in-roles)')
 resource foundryUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '53ca6127-db72-4b80-b1b0-d745d6d5456d'
   scope: subscription()
 }
 
 // If your web app/API code is going to be creating agents dynamically, you will need to assign a role such as this to App Service managed identity.
-/*@description('Built-in Role: [Foundry Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#foundry-project-manager)')
+/*@description('Built-in Role: [Foundry Project Manager](https://learn.microsoft.com/azure/foundry/concepts/rbac-foundry#built-in-roles)')
 resource foundryProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'eadc314b-1a2d-4efa-be10-5d325db5065e'
   scope: subscription()
