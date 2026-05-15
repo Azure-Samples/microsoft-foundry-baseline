@@ -141,7 +141,7 @@ resource foundryUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
-/*@description('Grant the App Service managed identity Foundry Project Manager role permission so it create the Foundry-hosted agent. Only needed if your code creates agents directly.')
+/*@description('Grant the App Service managed identity Foundry Project Manager role permission so it can create the Foundry-hosted agent. Only needed if your code creates agents directly.')
 resource foundryProjectManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: foundry
   name: guid(foundry.id, appServiceManagedIdentity.id, foundryProjectManagerRole.id)
