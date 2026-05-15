@@ -85,15 +85,15 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
   scope: subscription()
 }
 
-@description('Built-in Role: [Azure AI User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
-resource azureAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+@description('Built-in Role: [Foundry User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#foundry-user)')
+resource foundryUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '53ca6127-db72-4b80-b1b0-d745d6d5456d'
   scope: subscription()
 }
 
 // If your web app/API code is going to be creating agents dynamically, you will need to assign a role such as this to App Service managed identity.
-/*@description('Built-in Role: [Azure AI Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
-resource azureAiProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+/*@description('Built-in Role: [Foundry Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#foundry-project-manager)')
+resource foundryProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'eadc314b-1a2d-4efa-be10-5d325db5065e'
   scope: subscription()
 }*/
@@ -130,23 +130,23 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
-@description('Grant the App Service managed identity Azure AI user role permission so it can call into the Foundry-hosted agent.')
-resource azureAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+@description('Grant the App Service managed identity Foundry User role permission so it can call into the Foundry-hosted agent.')
+resource foundryUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: foundry
-  name: guid(foundry.id, appServiceManagedIdentity.id, azureAiUserRole.id)
+  name: guid(foundry.id, appServiceManagedIdentity.id, foundryUserRole.id)
   properties: {
-    roleDefinitionId: azureAiUserRole.id
+    roleDefinitionId: foundryUserRole.id
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
 }
 
-/*@description('Grant the App Service managed identity Azure AI manager role permission so it create the Foundry-hosted agent. Only needed if your code creates agents directly.')
-resource azureAiManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+/*@description('Grant the App Service managed identity Foundry Project Manager role permission so it create the Foundry-hosted agent. Only needed if your code creates agents directly.')
+resource foundryProjectManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: foundry
-  name: guid(foundry.id, appServiceManagedIdentity.id, azureAiProjectManagerRole.id)
+  name: guid(foundry.id, appServiceManagedIdentity.id, foundryProjectManagerRole.id)
   properties: {
-    roleDefinitionId: azureAiProjectManagerRole.id
+    roleDefinitionId: foundryProjectManagerRole.id
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
