@@ -36,7 +36,7 @@ resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' =
 }
 
 @description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, and Foundry Agents Service.')
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
   name: 'vnet-workload'
   location: location
   properties: {
@@ -225,7 +225,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
 }
 
 @description('The App Gateway subnet NSG')
-resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-appGatewaySubnet'
   location: location
   properties: {
@@ -318,7 +318,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01
 }
 
 @description('The App Service subnet NSG')
-resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-appServicesSubnet'
   location: location
   properties: {
@@ -356,7 +356,7 @@ resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01
 }
 
 @description('The Private endpoints subnet NSG')
-resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-privateEndpointsSubnet'
   location: location
   properties: {
@@ -380,7 +380,7 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024
 }
 
 @description('The Build agents subnet NSG')
-resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-buildAgentsSubnet'
   location: location
   properties: {
@@ -404,7 +404,7 @@ resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-0
 }
 
 @description('The Foundry Agent Service egress subnet NSG')
-resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-agentsEgressSubnet'
   location: location
   properties: {
@@ -471,7 +471,7 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
 // Bastion host subnet NSG
 // https://learn.microsoft.com/azure/bastion/bastion-nsg
 // https://github.com/Azure/azure-quickstart-templates/blob/master/quickstarts/microsoft.network/azure-bastion-nsg/main.bicep
-resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-bastionSubnet'
   location: location
   properties: {
@@ -642,7 +642,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' =
 }
 
 @description('The Jump box subnet NSG')
-resource jumpBoxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource jumpBoxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
   name: 'nsg-jumpBoxesSubnet'
   location: location
   properties: {
@@ -710,7 +710,7 @@ resource jumpBoxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' =
 }
 
 @description('Placeholder route table for egress traffic from subnets that we want to control routing for. When the firewall is created, the routes will be added.')
-resource egressRouteTable 'Microsoft.Network/routeTables@2024-05-01' = {
+resource egressRouteTable 'Microsoft.Network/routeTables@2025-07-01' = {
   name: 'udr-internet-to-firewall'
   location: location
   properties: {

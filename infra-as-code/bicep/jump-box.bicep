@@ -40,7 +40,7 @@ var jumpBoxName = 'jump-box'
 // ---- Existing resources ----
 
 @description('Existing virtual network for the solution.')
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
   name: virtualNetworkName
 
   resource jumpBoxSubnet 'subnets' existing = {
@@ -60,7 +60,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' exis
 // New resources
 
 @description('Required public IP for the Azure Bastion service, used for jump box access.')
-resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
+resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
   name: 'pip-${bastionHostName}'
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -83,7 +83,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
 }
 
 @description('Deploys Azure Bastion for secure access to the jump box.')
-resource bastion 'Microsoft.Network/bastionHosts@2024-05-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2025-07-01' = {
   name: bastionHostName
   location: location
   sku: {

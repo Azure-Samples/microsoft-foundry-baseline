@@ -35,7 +35,7 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
@@ -47,7 +47,7 @@ var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId
 var scopeAllContainers = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory'
 
 @description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Foundry project\'s identity.')
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-preview' existing = {
   name: existingCosmosDbAccountName
 
   @description('Built-in Cosmos DB Data Contributor role that can be assigned to Entra identities to grant data access on a Cosmos DB database.')
@@ -56,11 +56,11 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
   }
 }
 
-resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
+resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2026-04-01' existing = {
   name: existingStorageAccountName
 }
 
-resource azureAISearchService 'Microsoft.Search/searchServices@2025-02-01-preview' existing = {
+resource azureAISearchService 'Microsoft.Search/searchServices@2026-03-01-preview' existing = {
   name: existingAISearchAccountName
 }
 
@@ -82,7 +82,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 // ---- New resources ----
 
 @description('Existing Foundry account. The project will be created as a child resource of this account.')
-resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' existing  = {
+resource foundry 'Microsoft.CognitiveServices/accounts@2026-03-15-preview' existing  = {
   name: existingFoundryName
 
   resource project 'projects' = {
@@ -178,7 +178,6 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' exist
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
       properties: {
-        capabilityHostKind: 'Agents'
         vectorStoreConnections: ['${aiSearchConnection.name}']
         storageConnections: ['${storageConnection.name}']
         threadStorageConnections: ['${threadStorageConnection.name}']

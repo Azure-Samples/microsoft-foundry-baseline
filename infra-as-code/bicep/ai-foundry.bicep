@@ -59,7 +59,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 // ---- New resources ----
 
 @description('Deploy Microsoft Foundry (account) with Foundry Agent Service capability.')
-resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' = {
+resource foundry 'Microsoft.CognitiveServices/accounts@2026-03-15-preview' = {
   name: foundryName
   location: location
   kind: 'AIServices'
@@ -125,7 +125,7 @@ resource cognitiveServicesUser 'Microsoft.Authorization/roleAssignments@2022-04-
 // Private endpoints
 
 @description('Connect the Foundry account\'s endpoints to your existing private DNS zones.')
-resource foundryPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource foundryPrivateEndpoint 'Microsoft.Network/privateEndpoints@2025-07-01' = {
   name: 'pe-foundry'
   location: location
   dependsOn: [

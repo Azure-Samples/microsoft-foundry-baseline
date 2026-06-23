@@ -22,7 +22,7 @@ param conditionVersion string = ''
 param condition string = ''
 
 // ---- Existing resources ----
-resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' existing = {
+resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2026-04-01' existing = {
   name: existingStorageAccountName
 }
 

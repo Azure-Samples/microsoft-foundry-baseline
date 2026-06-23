@@ -29,7 +29,7 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
@@ -56,7 +56,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 // ---- New resources ----
 
 @description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Foundry Agent Service. It\'s used to store threads and agent definitions.')
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-preview' = {
   name: 'cdb-ai-agent-threads-${baseName}'
   location: location
   kind: 'GlobalDocumentDB'
@@ -166,7 +166,7 @@ resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-prev
 
 // Private endpoints
 
-resource cosmosDbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource cosmosDbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2025-07-01' = {
   name: 'pe-ai-agent-threads'
   location: resourceGroup().location
   properties: {

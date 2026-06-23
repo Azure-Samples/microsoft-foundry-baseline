@@ -15,7 +15,7 @@ param principalId string
 param keyVaultName string
 
 // ---- Existing resources ----
-resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-03-01-preview' existing = {
   name: keyVaultName
 }
 

@@ -25,7 +25,7 @@ param privateEndpointSubnetResourceId string
 // ---- New resources ----
 
 @description('The User Managed Identity for the Foundry project. Foundry will use this identity for all agent interactions with the connected dependencies.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' = {
   name: 'mi-agent-${baseName}'
   location: location
 }

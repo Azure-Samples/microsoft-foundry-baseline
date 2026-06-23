@@ -31,7 +31,7 @@ param logAnalyticsWorkspaceName string
 
 // ---- Existing resources ----
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing =  {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing =  {
   name: virtualNetworkName
 
   resource privateEndpointsSubnet 'subnets' existing = {
@@ -50,7 +50,7 @@ resource existingKeyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-
 
 // ---- New resources ----
 
-resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-03-01-preview' = {
   name: 'kv-${baseName}'
   location: location
   properties: {
@@ -117,7 +117,7 @@ resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-prev
 
 // Private endpoints
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2025-07-01' = {
   name: 'pe-key-vault'
   location: location
   properties: {
