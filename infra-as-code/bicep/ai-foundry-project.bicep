@@ -178,6 +178,8 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2026-03-15-preview' exist
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
       properties: {
+        #disable-next-line BCP037 // This is a valid property, just not part of the schema https://learn.microsoft.com/azure/templates/microsoft.cognitiveservices/accounts/capabilityhosts?pivots=deployment-language-bicep#capabilityhostproperties
+        capabilityHostKind: 'Agents'
         vectorStoreConnections: ['${aiSearchConnection.name}']
         storageConnections: ['${storageConnection.name}']
         threadStorageConnections: ['${threadStorageConnection.name}']
