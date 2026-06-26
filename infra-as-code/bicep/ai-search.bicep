@@ -29,7 +29,7 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
@@ -53,7 +53,7 @@ resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefini
 
 // ---- New resources ----
 
-resource azureAiSearchService 'Microsoft.Search/searchServices@2026-03-01-preview' = {
+resource azureAiSearchService 'Microsoft.Search/searchServices@2025-05-01' = {
   name: 'ais-ai-agent-vector-store-${baseName}'
   location: location
   identity: {

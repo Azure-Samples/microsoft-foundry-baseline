@@ -16,7 +16,7 @@ param principalId string
 param existingAISearchAccountName string
 
 // ---- Existing resources ----
-resource azureAISearchService 'Microsoft.Search/searchServices@2026-03-01-preview' existing = {
+resource azureAISearchService 'Microsoft.Search/searchServices@2025-05-01' existing = {
   name: existingAISearchAccountName
 }
 

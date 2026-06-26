@@ -50,7 +50,7 @@ resource existingKeyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-
 
 // ---- New resources ----
 
-resource keyVault 'Microsoft.KeyVault/vaults@2026-03-01-preview' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' = {
   name: 'kv-${baseName}'
   location: location
   properties: {

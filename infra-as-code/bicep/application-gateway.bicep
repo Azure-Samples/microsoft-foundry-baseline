@@ -62,7 +62,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' exis
   name: logAnalyticsWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2026-03-01-preview' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' existing = {
   name: keyVaultName
 
   resource kvsGatewayPublicCert 'secrets' existing = {
