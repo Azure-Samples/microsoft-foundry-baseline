@@ -32,7 +32,7 @@ param debugUserPrincipalId string
 
 // ---- Existing resources ----
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
   name: virtualNetworkName
 
   resource privateEndpointsSubnet 'subnets' existing = {
@@ -57,7 +57,7 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions
 // ---- New resources ----
 
 @description('Deploy a storage account for the web app to use as a deployment source for its web application code. Will be exposed only via private endpoint.')
-resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
+resource appDeployStorage 'Microsoft.Storage/storageAccounts@2026-04-01' = {
   name: 'stwebapp${baseName}'
   location: location
   sku: {
@@ -158,7 +158,7 @@ resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/ro
   }
 }
 
-resource webAppStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource webAppStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2025-07-01' = {
   name: 'pe-web-app-storage'
   location: location
   properties: {

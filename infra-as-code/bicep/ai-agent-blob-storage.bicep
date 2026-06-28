@@ -29,7 +29,7 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
@@ -54,7 +54,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 // ---- New resources ----
 
-resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
+resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2026-04-01' = {
   name: 'stagent${baseName}'
   location: location
   sku: {
@@ -123,7 +123,7 @@ module projectBlobDataContributorAssignment './modules/storageAccountRoleAssignm
 
 // Private endpoints
 
-resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2025-07-01' = {
   name: 'pe-ai-agent-storage'
   location: location
   properties: {

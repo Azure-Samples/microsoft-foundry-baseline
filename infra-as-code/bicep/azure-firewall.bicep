@@ -27,7 +27,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 }
 
 @description('Existing virtual network.')
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
   name: virtualNetworkName
 
   resource agentsEgressSubnet 'subnets' existing = {
@@ -50,7 +50,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing 
 // ---- New resources ----
 
 @description('The public IP address for all traffic egressing from the firewall. You can add more addresses if needed to reduce the chance for port exhaustion.')
-resource publicIpForAzureFirewallEgress 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
+resource publicIpForAzureFirewallEgress 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
   name: 'pip-firewall-egress-00'
   location: location
   sku: {
@@ -66,7 +66,7 @@ resource publicIpForAzureFirewallEgress 'Microsoft.Network/publicIPAddresses@202
 }
 
 @description('The public IP address for the Azure Firewall control plane.')
-resource publicIpForAzureFirewallManagement 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
+resource publicIpForAzureFirewallManagement 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
   name: 'pip-firewall-mgmt-00'
   location: location
   sku: {
@@ -82,7 +82,7 @@ resource publicIpForAzureFirewallManagement 'Microsoft.Network/publicIPAddresses
 }
 
 @description('The firewall rules assigned to our egress firewall.')
-resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
+resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2025-07-01' = {
   name: 'fw-egress-policy'
   location: location
   properties: {
@@ -198,7 +198,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
 }
 
 @description('Our workload\'s egress firewall. This is used to control outbound traffic from the workload to the Internet.')
-resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
+resource azureFirewall 'Microsoft.Network/azureFirewalls@2025-07-01' = {
   name: 'fw-egress'
   location: location
   zones: pickZones('Microsoft.Network', 'azureFirewalls', location, 3)
@@ -243,7 +243,7 @@ resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   ]
 }
 
-resource egressRouteTable 'Microsoft.Network/routeTables@2024-05-01' existing = {
+resource egressRouteTable 'Microsoft.Network/routeTables@2025-07-01' existing = {
   name: 'udr-internet-to-firewall'
 
   resource internetToFirewall 'routes' = {

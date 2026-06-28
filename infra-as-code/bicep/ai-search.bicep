@@ -29,7 +29,7 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
@@ -53,7 +53,7 @@ resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefini
 
 // ---- New resources ----
 
-resource azureAiSearchService 'Microsoft.Search/searchServices@2025-02-01-preview' = {
+resource azureAiSearchService 'Microsoft.Search/searchServices@2025-05-01' = {
   name: 'ais-ai-agent-vector-store-${baseName}'
   location: location
   identity: {
@@ -65,7 +65,7 @@ resource azureAiSearchService 'Microsoft.Search/searchServices@2025-02-01-previe
   properties: {
     disableLocalAuth: true
     authOptions: null
-    hostingMode: 'default'
+    hostingMode: 'Default'
     partitionCount: 1 // Production readiness change: This can be updated based on the expected data volume and query load.
     replicaCount: 3   // 3 replicas are required for 99.9% availability for read/write operations
     semanticSearch: 'disabled'
@@ -133,7 +133,7 @@ resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-prev
 
 // Private endpoints
 
-resource aiSearchPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource aiSearchPrivateEndpoint 'Microsoft.Network/privateEndpoints@2025-07-01' = {
   name: 'pe-ai-agent-search'
   location: location
   properties: {

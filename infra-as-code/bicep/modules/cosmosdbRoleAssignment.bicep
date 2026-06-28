@@ -15,7 +15,7 @@ param principalId string
 param existingCosmosDbAccountName string
 
 // ---- Existing resources ----
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2025-05-01-preview' existing = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-03-15' existing = {
   name: existingCosmosDbAccountName
 }
 

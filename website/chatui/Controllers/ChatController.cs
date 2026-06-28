@@ -2,6 +2,7 @@
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Foundry;
 using chatui.Configuration;
+using System.Text;
 
 namespace chatui.Controllers;
 
@@ -20,7 +21,9 @@ public class ChatController(
     {
         if (string.IsNullOrWhiteSpace(message))
             throw new ArgumentException("Message cannot be null, empty, or whitespace.", nameof(message));
-        logger.LogDebug("Prompt received {Prompt}", message);
+
+        // Sanitize untrusted input before logging to prevent log forging via newline/control characters.
+        logger.LogDebug("Prompt received {Prompt}", SanitizeForLog(message));
 
         FoundryAgent agent = agentResolver.GetAgent();
 
@@ -40,5 +43,32 @@ public class ChatController(
         var session = await agent.CreateConversationSessionAsync();
 
         return Ok(new { id = session.ConversationId });
+    }
+
+    private static string SanitizeForLog(string input)
+    {
+        var builder = new StringBuilder(input.Length);
+
+        foreach (char character in input)
+        {
+            if (character == '\r')
+            {
+                builder.Append("\\r");
+            }
+            else if (character == '\n')
+            {
+                builder.Append("\\n");
+            }
+            else if (char.IsControl(character))
+            {
+                builder.Append('?');
+            }
+            else
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString();
     }
 }

@@ -46,7 +46,7 @@ var wafPolicyName= 'waf-${baseName}'
 
 // ---- Existing resources ----
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing =  {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing =  {
   name: virtualNetworkName
 
   resource applicationGatewaySubnet 'subnets' existing = {
@@ -54,7 +54,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing 
   }
 }
 
-resource webApp 'Microsoft.Web/sites@2024-04-01' existing = {
+resource webApp 'Microsoft.Web/sites@2025-03-01' existing = {
   name: appName
 }
 
@@ -62,7 +62,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' exis
   name: logAnalyticsWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' existing = {
   name: keyVaultName
 
   resource kvsGatewayPublicCert 'secrets' existing = {
@@ -95,7 +95,7 @@ module grantAppGatewaySecretsUserRoleAssignment './modules/keyvaultRoleAssignmen
 }
 
 //External IP for App Gateway
-resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
+resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
   name: appGatewayPublicIpName
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -178,7 +178,7 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
 }
 
 //App Gateway
-resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
+resource appGateway 'Microsoft.Network/applicationGateways@2025-07-01' = {
   name: appGatewayName
   location: location
   zones: pickZones('Microsoft.Network', 'applicationGateways', location, 3)

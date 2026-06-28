@@ -24,13 +24,13 @@ param existingCosmosCollectionTypeName string
 param scopeUserContainerId string
 
 // ---- Existing resources ----
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2025-05-01-preview' existing = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-03-15' existing = {
   name: existingCosmosDbAccountName
 }
 
 // ---- Role assignment ----
 @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2025-05-01-preview' = {
+resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2026-03-15' = {
   name: guid(principalId, roleDefinitionId, existingCosmosDbName, existingCosmosCollectionTypeName)
   parent: cosmosDbAccount
   properties: {
