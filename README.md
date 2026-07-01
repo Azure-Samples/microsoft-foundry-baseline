@@ -2,7 +2,7 @@
 
 This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Microsoft Foundry Agent Service as the agent orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-microsoft-foundry-chat) on Microsoft Learn.
 
-Follow this implementation to deploy an agent in [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
+Follow this implementation to deploy an agent in [Microsoft Foundry](https://learn.microsoft.com/azure/foundry/) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
 - Creating agents and agent prompts
 - Querying data stores for grounding data
