@@ -37,3 +37,4 @@ msbuild.wrn
 appgw.key
 appgw.pfx
 appgw.crt
+.preflight/
